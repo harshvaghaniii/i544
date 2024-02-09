@@ -110,6 +110,11 @@ export class LendingLibrary {
                 errors.push(new Errors.Err(msg, { code: "MISSING", widget }));
             }
         }
+
+        /**
+         * Returning missing type errors
+         */
+
         if (errors.length > 0) {
             return new Errors.ErrResult(errors);
         }
@@ -119,22 +124,92 @@ export class LendingLibrary {
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
             // return new Errors.ErrResult(errors);
         }
-        if (!Array.isArray(authors)) {
+        if (isNaN(Number(pages))) {
+            const msg: string = `Property pages must be numeric`;
+            const widget: string = "pages";
+            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+            // return new Errors.ErrResult(errors);
+        }
+        if (nCopies && isNaN(Number(nCopies))) {
+            const msg: string = `Property nCopies must be numeric`;
+            const widget: string = "nCopies";
+            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+            // return new Errors.ErrResult(errors);
+        }
+
+        /**
+         * Checking for numeric fields
+         */
+
+        if (errors.length > 0) {
+            return new Errors.ErrResult(errors);
+        }
+
+        // Checking if nCopies is an Integer field
+
+        if (nCopies && nCopies !== Math.floor(nCopies)) {
+            const msg: string = `nCopies must be an integer field!`;
+            const widget: string = "nCopies";
+            errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
+            return new Errors.ErrResult(errors);
+        }
+
+        // Checking if Authors is an array field
+
+        if (
+            typeof authors !== "function" &&
+            typeof authors.length !== "number"
+        ) {
             const msg: string = `authors must have type string[]`;
             const widget: string = "author";
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
             return new Errors.ErrResult(errors);
         }
-        // if (year != Math.floor(year)) {
-        //     const msg: string = `property year must be Integer`;
-        //     const widget: string = "year";
-        //     errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
-        // }
-        if (!authors.every((item: any) => typeof item === "string")) {
-            const msg: string = `An author must be of type string`;
+
+        if (authors.length === 0) {
+            const msg: string = `authors must not be empty`;
             const widget: string = "author";
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+            return new Errors.ErrResult(errors);
         }
+
+        authors.every((author: any) => {
+            if (typeof author !== "string") {
+                const msg: string = "authors must of type string";
+                const widget: string = "author";
+                errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+                return new Errors.ErrResult(errors);
+            }
+        });
+
+        // if (errors.length > 0) {
+        //     return new Errors.ErrResult(errors);
+        // }
+
+        /**
+         * Checking validation for string fields
+         */
+
+        if (typeof title !== "string") {
+            const msg: string = `Property title must be of type string`;
+            const widget: string = "title";
+            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+        }
+        if (typeof publisher !== "string") {
+            const msg: string = `Property publisher must be of type string`;
+            const widget: string = "publisher";
+            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+        }
+        if (typeof isbn !== "string") {
+            const msg: string = `Property isbn must be of type string`;
+            const widget: string = "isbn";
+            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+        }
+
+        if (errors.length > 0) {
+            return new Errors.ErrResult(errors);
+        }
+
         if (nCopies && nCopies != Math.floor(nCopies)) {
             const msg: string = `property nCopies must be Integer`;
             const widget: string = "nCopies";
@@ -144,17 +219,16 @@ export class LendingLibrary {
         if (errors.length > 0) {
             return new Errors.ErrResult(errors);
         }
-
+        if (year != Math.floor(year)) {
+            const msg: string = `property year must be Integer`;
+            const widget: string = "year";
+            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+        }
         if ((nCopies && nCopies < 0) || nCopies == 0) {
             const msg = `nCopies must be positive`;
             const widget: string = "nCopies";
             errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
             return new Errors.ErrResult(errors);
-        }
-        if (authors.length <= 0) {
-            const msg: string = `Authors cannot be empty!`;
-            const widget: string = "author";
-            errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
         }
 
         // return Errors.errResult("TODO"); //placeholder
