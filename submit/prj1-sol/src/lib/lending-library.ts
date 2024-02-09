@@ -72,7 +72,6 @@ export class LendingLibrary {
         const error: string[] = [];
         const widgets: string[] = [
             "title",
-            "authors",
             "isbn",
             "pages",
             "year",
@@ -85,7 +84,14 @@ export class LendingLibrary {
          * Or else, don't add it and return an error
          */
 
-        let { isbn, title, authors, pages, year, publisher, nCopies } = req;
+        // let { isbn, title, authors, pages, year, publisher, nCopies } = req;
+        const isbn: ISBN = req.isbn;
+        const title: string = req.title;
+        const authors: string[] = req.authors;
+        const pages: number = req.pages;
+        const year: number = req.year;
+        const publisher: string = req.publisher;
+        const nCopies: number = req.nCopies || 1;
         if (!isbn) {
             error.push("isbn");
         }
@@ -93,7 +99,11 @@ export class LendingLibrary {
             error.push("title");
         }
         if (!authors) {
-            error.push("authors");
+            // error.push("authors");
+            const msg = "Authors is missing";
+            errors.push(
+                new Errors.Err(msg, { code: "MISSING", widget: "authors" })
+            );
         }
         if (!pages) {
             error.push("pages");
@@ -118,23 +128,25 @@ export class LendingLibrary {
         if (errors.length > 0) {
             return new Errors.ErrResult(errors);
         }
+
+        /**
+         * Check for numeric fields
+         */
+
         if (isNaN(Number(year))) {
             const msg: string = `Property year must be numeric`;
             const widget: string = "year";
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
-            // return new Errors.ErrResult(errors);
         }
         if (isNaN(Number(pages))) {
             const msg: string = `Property pages must be numeric`;
             const widget: string = "pages";
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
-            // return new Errors.ErrResult(errors);
         }
         if (nCopies && isNaN(Number(nCopies))) {
             const msg: string = `Property nCopies must be numeric`;
             const widget: string = "nCopies";
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
-            // return new Errors.ErrResult(errors);
         }
 
         /**
@@ -147,44 +159,41 @@ export class LendingLibrary {
 
         // Checking if nCopies is an Integer field
 
-        if (nCopies && nCopies !== Math.floor(nCopies)) {
+        if (nCopies !== Math.floor(nCopies)) {
             const msg: string = `nCopies must be an integer field!`;
             const widget: string = "nCopies";
             errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
             return new Errors.ErrResult(errors);
         }
 
+        // Checking for an empty author array
+
+        if (authors.length == 0) {
+            const msg: string = "Authors should not be empty";
+            const widget: string = "authors";
+            const code: string = "BAD_TYPE";
+            errors.push(new Errors.Err(msg, { code, widget }));
+            return new Errors.ErrResult(errors);
+        }
+
         // Checking if Authors is an array field
 
-        if (
-            typeof authors !== "function" &&
-            typeof authors.length !== "number"
-        ) {
-            const msg: string = `authors must have type string[]`;
-            const widget: string = "author";
-            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+        if (!Array.isArray(authors)) {
+            const msg = "Authors must be an array of string";
+            errors.push(
+                new Errors.Err(msg, { code: "BAD_TYPE", widget: "authors" })
+            );
             return new Errors.ErrResult(errors);
         }
-
-        if (authors.length === 0) {
-            const msg: string = `authors must not be empty`;
-            const widget: string = "author";
-            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
-            return new Errors.ErrResult(errors);
-        }
-
-        authors.every((author: any) => {
+        for (let author of authors) {
             if (typeof author !== "string") {
-                const msg: string = "authors must of type string";
-                const widget: string = "author";
-                errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+                const msg = "property author must be of type string";
+                errors.push(
+                    new Errors.Err(msg, { code: "BAD_TYPE", widget: "authors" })
+                );
                 return new Errors.ErrResult(errors);
             }
-        });
-
-        // if (errors.length > 0) {
-        //     return new Errors.ErrResult(errors);
-        // }
+        }
 
         /**
          * Checking validation for string fields
@@ -224,7 +233,7 @@ export class LendingLibrary {
             const widget: string = "year";
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
         }
-        if ((nCopies && nCopies < 0) || nCopies == 0) {
+        if ((req.nCopies && req.nCopies < 0) || req.nCopies == 0) {
             const msg = `nCopies must be positive`;
             const widget: string = "nCopies";
             errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
@@ -233,9 +242,6 @@ export class LendingLibrary {
 
         // return Errors.errResult("TODO"); //placeholder
         if (error.length === 0) {
-            if (!nCopies) {
-                nCopies = 1;
-            }
             this.bookMap = {
                 ...this.bookMap,
                 isbn: {
@@ -300,45 +306,3 @@ export class LendingLibrary {
 /********************* General Utility Functions ***********************/
 
 //TODO: add general utility functions or classes.
-
-// const missingRequiredFields: (a: Record<string, any>) => boolean = (
-//     req: Record<string, any>
-// ) => {
-//     if (
-//         !req ||
-//         !req.title ||
-//         !req.authors ||
-//         !req.isbn ||
-//         !req.pages ||
-//         !req.year ||
-//         !req.publisher
-//     ) {
-//         return true;
-//     }
-//     return false;
-// };
-
-// const isBadlyTyped: (req: Record<string, any>) => boolean = (
-//     req: Record<string, any>
-// ) => {
-//     const { title, authors, isbn, pages, year, publisher } = req;
-//     if (typeof title !== "string" || typeof publisher !== "string") {
-//         return true;
-//     }
-//     if (
-//         !(
-//             Array.isArray(authors) &&
-//             authors.length > 0 &&
-//             authors.every((item: any) => typeof item === "string")
-//         )
-//     ) {
-//         return true;
-//     }
-//     if (typeof pages !== "number" || typeof year !== "number") {
-//         return true;
-//     }
-//     if (typeof isbn !== "string") {
-//         return true;
-//     }
-//     return false;
-// };
