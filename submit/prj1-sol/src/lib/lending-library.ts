@@ -77,14 +77,7 @@ export class LendingLibrary {
             "year",
             "publisher",
         ];
-        /**
-         * Idea: You're getting a book in the form of req
-         * Check if it is a valid book
-         * If it is, add it to the bookMap
-         * Or else, don't add it and return an error
-         */
 
-        // let { isbn, title, authors, pages, year, publisher, nCopies } = req;
         const isbn: ISBN = req.isbn;
         const title: string = req.title;
         const authors: string[] = req.authors;
@@ -99,7 +92,6 @@ export class LendingLibrary {
             error.push("title");
         }
         if (!authors) {
-            // error.push("authors");
             const msg = "Authors is missing";
             errors.push(
                 new Errors.Err(msg, { code: "MISSING", widget: "authors" })
@@ -121,17 +113,13 @@ export class LendingLibrary {
             }
         }
 
-        /**
-         * Returning missing type errors
-         */
+        // Returning missing type errors
 
         if (errors.length > 0) {
             return new Errors.ErrResult(errors);
         }
 
-        /**
-         * Check for numeric fields
-         */
+        // Checking for numeric fields
 
         if (isNaN(Number(year))) {
             const msg: string = `Property year must be numeric`;
@@ -149,9 +137,7 @@ export class LendingLibrary {
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
         }
 
-        /**
-         * Checking for numeric fields
-         */
+        // Returning numeric type errors
 
         if (errors.length > 0) {
             return new Errors.ErrResult(errors);
@@ -195,9 +181,7 @@ export class LendingLibrary {
             }
         }
 
-        /**
-         * Checking validation for string fields
-         */
+        // Checking validation for string fields
 
         if (typeof title !== "string") {
             const msg: string = `Property title must be of type string`;
@@ -214,6 +198,8 @@ export class LendingLibrary {
             const widget: string = "isbn";
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
         }
+
+        // Returning the errors for badly typed string types
 
         if (errors.length > 0) {
             return new Errors.ErrResult(errors);
