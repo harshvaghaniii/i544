@@ -228,9 +228,8 @@ export class LendingLibrary {
 
         // return Errors.errResult("TODO"); //placeholder
         if (error.length === 0) {
-            this.bookMap = {
-                ...this.bookMap,
-                isbn: {
+            const userBook: Record<ISBN, XBook> = {
+                [isbn]: {
                     isbn,
                     title,
                     authors,
@@ -240,7 +239,96 @@ export class LendingLibrary {
                     nCopies,
                 },
             };
-            return Errors.okResult(this.bookMap.isbn);
+            const bookInMap: Required<Book> = this.bookMap[userBook[isbn].isbn];
+            // console.log("This is the isbn: ", userBook[isbn].isbn);
+            // console.log("Printing the bookmap: ", this.bookMap);
+
+            // console.log("Here: ", this.bookMap[userBook[isbn].isbn]);
+
+            if (bookInMap) {
+                // console.log(
+                //     "I'm here and this is bookMap: " +
+                //         JSON.stringify(this.bookMap)
+                // );
+                /**
+                 * TODO:
+                 * Check the validations of the book since the book already exists in library. If passed, increment the count or else send an error.
+                 */
+                // Steps to follow after verifying that the entered book is valid
+                /**
+                 * Check if the book exists in library
+                 * If yes, check if all the details entered here are the same as existing book
+                 * If yes, increase the nCopies count
+                 */
+                const {
+                    title: uTitle,
+                    authors: uAuthors,
+                    isbn: uIsbn,
+                    pages: uPages,
+                    year: uYear,
+                    publisher: uPublisher,
+                    nCopies: uNcopies,
+                } = bookInMap;
+                if (
+                    title === uTitle &&
+                    arraysEqual(authors, uAuthors) &&
+                    pages === uPages &&
+                    year === uYear &&
+                    publisher === uPublisher
+                ) {
+                    console.log(
+                        "Existing nCopies: ",
+                        this.bookMap[isbn].nCopies
+                    );
+                    console.log("New nCopies: ", userBook[isbn].nCopies);
+
+                    this.bookMap[isbn].nCopies += userBook[isbn].nCopies;
+                } else {
+                    const msg: string =
+                        "Data entered is inconsistent with the existing data in the library";
+                    const code: string = "BAD_REQ";
+                    const widget: string = "inconsistent";
+                    errors.push(new Errors.Err(msg, { code, widget }));
+                    return new Errors.ErrResult(errors);
+                }
+            } else {
+                /**
+                 * TODO:
+                 * If the book is being added in the library for the first time, add the data in the search map and then add it to the bookMap.
+                 */
+                const words: string[] = title
+                    .split(/\W+/)
+                    .filter((word) => word.length > 1);
+                for (let author of authors) {
+                    const temp: string[] = author
+                        .split(/\W+/)
+                        .filter((word) => word.length > 1);
+                    words.push(...temp);
+                }
+
+                // TODO: Adding those words to the search map
+
+                for (let word of words) {
+                    if (this.searchMap.hasOwnProperty(word)) {
+                        this.searchMap[word].push(isbn);
+                    } else {
+                        this.searchMap[word.toLowerCase()] = [isbn];
+                    }
+                }
+                this.bookMap = {
+                    ...this.bookMap,
+                    [isbn]: {
+                        isbn,
+                        title,
+                        authors,
+                        pages,
+                        year,
+                        publisher,
+                        nCopies,
+                    },
+                };
+            }
+            return Errors.okResult(this.bookMap[isbn]);
         } else {
             return new Errors.ErrResult(errors);
         }
@@ -292,3 +380,24 @@ export class LendingLibrary {
 /********************* General Utility Functions ***********************/
 
 //TODO: add general utility functions or classes.
+
+function arraysEqual<T>(array1: T[], array2: T[]): boolean {
+    // Check if the arrays have the same length
+    if (array1.length !== array2.length) {
+        return false;
+    }
+
+    // Sort both arrays
+    const sortedArray1 = array1.slice().sort();
+    const sortedArray2 = array2.slice().sort();
+
+    // Check each element of the sorted arrays
+    for (let i = 0; i < sortedArray1.length; i++) {
+        if (sortedArray1[i] !== sortedArray2[i]) {
+            return false; // Elements at position i are different
+        }
+    }
+
+    // All elements are the same
+    return true;
+}
