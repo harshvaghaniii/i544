@@ -240,16 +240,8 @@ export class LendingLibrary {
                 },
             };
             const bookInMap: Required<Book> = this.bookMap[userBook[isbn].isbn];
-            // console.log("This is the isbn: ", userBook[isbn].isbn);
-            // console.log("Printing the bookmap: ", this.bookMap);
-
-            // console.log("Here: ", this.bookMap[userBook[isbn].isbn]);
 
             if (bookInMap) {
-                // console.log(
-                //     "I'm here and this is bookMap: " +
-                //         JSON.stringify(this.bookMap)
-                // );
                 /**
                  * TODO:
                  * Check the validations of the book since the book already exists in library. If passed, increment the count or else send an error.
@@ -276,12 +268,6 @@ export class LendingLibrary {
                     year === uYear &&
                     publisher === uPublisher
                 ) {
-                    console.log(
-                        "Existing nCopies: ",
-                        this.bookMap[isbn].nCopies
-                    );
-                    console.log("New nCopies: ", userBook[isbn].nCopies);
-
                     this.bookMap[isbn].nCopies += userBook[isbn].nCopies;
                 } else {
                     const msg: string =
@@ -307,10 +293,9 @@ export class LendingLibrary {
                 }
 
                 // TODO: Adding those words to the search map
-
                 for (let word of words) {
-                    if (this.searchMap.hasOwnProperty(word)) {
-                        this.searchMap[word].push(isbn);
+                    if (this.searchMap[word.toLowerCase()]) {
+                        this.searchMap[word.toLowerCase()].push(isbn);
                     } else {
                         this.searchMap[word.toLowerCase()] = [isbn];
                     }
@@ -344,8 +329,79 @@ export class LendingLibrary {
      *    BAD_REQ: no words in search
      */
     findBooks(req: Record<string, any>): Errors.Result<XBook[]> {
-        //TODO
-        return Errors.errResult("TODO"); //placeholder
+        const errors: Errors.Err[] = [];
+
+        // Checking for empty search string
+        const searchQuery = req.search.trim().toLowerCase();
+        if (searchQuery === "") {
+            const msg: string = "The search cannot be empty";
+            const code: string = "BAD_REQ";
+            errors.push(new Errors.Err(msg, { code }));
+            return new Errors.ErrResult(errors);
+        }
+
+        const searchWords: string[] = searchQuery
+            .split(/\W+/)
+            .filter((word: string) => word.length > 1);
+
+        // Checking for Search String without any words error
+
+        if (searchWords.length === 0) {
+            const msg: string =
+                "The search query does not contain any valid word! Please enter a query of length more than 1.";
+            const code: string = "BAD_REQ";
+            errors.push(new Errors.Err(msg, { code }));
+            return new Errors.ErrResult(errors);
+        }
+
+        // The books array will store the
+
+        const books: XBook[] = [];
+
+        /**
+         * TODO:
+         * Iterate through the searchWords array and check if those words exist in the search map. If any of the words if absent in the searchMap, simply return an empty array;
+         */
+        const setArr: Set<ISBN>[] = [];
+        for (let word of searchWords) {
+            if (!this.searchMap[word]) {
+                return Errors.okResult(<XBook[]>[]);
+            }
+            const curr_set: Set<ISBN> = new Set<ISBN>();
+            for (let bookIsbn of this.searchMap[word]) {
+                curr_set.add(bookIsbn);
+            }
+            setArr.push(curr_set);
+        }
+        if (setArr.length == 1) {
+            for (let set of setArr) {
+                for (let i of set) {
+                    books.push(this.bookMap[i]);
+                }
+            }
+            return Errors.okResult(books);
+        }
+
+        // TODO: Since multiple sets are created, find the intersection of these words in the ISBN
+        let final_set: Set<ISBN> = setArr[0];
+
+        for (let i = 1; i < setArr.length; i++) {
+            const temp_set = setArr[i];
+
+            const intersectionSet = [...final_set].filter((x) =>
+                temp_set.has(x)
+            );
+            final_set = new Set<ISBN>(intersectionSet);
+        }
+        if (final_set.size === 0) {
+            return Errors.okResult(<XBook[]>[]);
+        }
+
+        for (let isbn of final_set) {
+            books.push(this.bookMap[isbn]);
+        }
+
+        return Errors.okResult(books);
     }
 
     /** Set up patron req.patronId to check out book req.isbn.
