@@ -472,8 +472,37 @@ export class LendingLibrary {
      *    BAD_REQ error on business rule violation.
      */
     returnBook(req: Record<string, any>): Errors.Result<void> {
+        const errors: Errors.Err[] = [];
+        const { patronId, isbn } = req;
+        /**
+         * TODO:
+         * Validating the return requests by checking that the isbn is present for the patron in the trackBook and checking that the patron is present for the book isbn in trackPatron
+         */
+
+        if (
+            !this.trackBooks[patronId].includes(isbn) ||
+            !this.trackPatrons[isbn].includes(patronId)
+        ) {
+            const msg: string = "Invalid return";
+            const code: string = "BAD_REQ";
+            errors.push(new Errors.Err(msg, { code }));
+            return new Errors.ErrResult(errors);
+        }
+
+        /**
+         * TODO:
+         * If everything is valid: Remove the isbn id for that patron and remote the patron id for that isbn
+         */
+
+        const books: ISBN[] = this.trackBooks[patronId];
+        this.trackBooks[patronId] = books.filter((key) => key !== isbn);
+
+        const patrons: PatronId[] = this.trackPatrons[isbn];
+        this.trackPatrons[isbn] = patrons.filter((key) => key !== patronId);
+        this.bookMap[isbn].nCopies += 1;
+
         //TODO
-        return Errors.errResult("TODO"); //placeholder
+        return Errors.VOID_RESULT; //placeholder
     }
 }
 
