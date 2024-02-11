@@ -280,8 +280,12 @@ export class LendingLibrary {
             } else {
                 /**
                  * TODO:
-                 * If the book is being added in the library for the first time, add the data in the search map and then add it to the bookMap.
+                 * If the book is being added in the library for the first time, add the data in the search map and then add it to the bookMap. Also, add the data in the trackPatrons where it will be intialized with the ISBN and an empty array of patrons.
                  */
+                this.trackPatrons = {
+                    ...this.trackPatrons,
+                    [isbn]: [] as PatronId[],
+                };
                 const words: string[] = title
                     .split(/\W+/)
                     .filter((word) => word.length > 1);
@@ -333,6 +337,7 @@ export class LendingLibrary {
 
         // Checking for empty search string
         const searchQuery = req.search.trim().toLowerCase();
+        // /^\s*$/   *** Empty string regex
         if (searchQuery === "") {
             const msg: string = "The search cannot be empty";
             const code: string = "BAD_REQ";
@@ -412,8 +417,51 @@ export class LendingLibrary {
      *    BAD_REQ error on business rule violation.
      */
     checkoutBook(req: Record<string, any>): Errors.Result<void> {
+        const errors: Errors.Err[] = [];
+        const { patronId, isbn } = req;
+        if (!this.bookMap[isbn]) {
+            const msg: string = "Invalid book isbn entered";
+            const code: string = "BAD_REQ";
+            errors.push(new Errors.Err(msg, { code }));
+            return new Errors.ErrResult(errors);
+        }
+
+        /**
+         * TODO:
+         * Check if the patron already has this copy of book. If yes, return an error.
+         */
+
+        if (this.trackPatrons[isbn].includes(patronId)) {
+            const msg: string = "The patron already has this book checked out!";
+            const code: string = "BAD_REQ";
+            errors.push(new Errors.Err(msg, { code, widget: "isbn" }));
+            return new Errors.ErrResult(errors);
+        }
+        /**
+         * TODO:
+         * Check if all the copies of the books are being exhausted. If yes, return an error.
+         */
+
+        if (this.bookMap[isbn].nCopies === 0) {
+            const msg: string = "There are no copies left!";
+            const code: string = "BAD_REQ";
+            errors.push(new Errors.Err(msg, { code }));
+            return new Errors.ErrResult(errors);
+        }
+
+        /**
+         * TODO:
+         * If all the conditions are valid, update the trackBook data structure,
+         */
+        this.bookMap[isbn].nCopies -= 1;
+        if (this.trackBooks[patronId]) {
+            this.trackBooks[patronId].push(isbn);
+        } else {
+            this.trackBooks[patronId] = [isbn];
+        }
+        this.trackPatrons[isbn].push(patronId);
         //TODO
-        return Errors.errResult("TODO"); //placeholder
+        return Errors.VOID_RESULT; //placeholder
     }
 
     /** Set up patron req.patronId to returns book req.isbn.
