@@ -334,14 +334,19 @@ export class LendingLibrary {
      */
     findBooks(req: Record<string, any>): Errors.Result<XBook[]> {
         const errors: Errors.Err[] = [];
-
+        if (!req.search) {
+            const msg: string = "property search is required";
+            const code: string = "MISSING";
+            errors.push(new Errors.Err(msg, { code, widget: "search" }));
+            return new Errors.ErrResult(errors);
+        }
         // Checking for empty search string
-        const searchQuery = req.search.trim().toLowerCase();
+        const searchQuery = req.search ? req.search.trim().toLowerCase() : "";
         // /^\s*$/   *** Empty string regex
         if (searchQuery === "") {
-            const msg: string = "The search cannot be empty";
+            const msg: string = "property search is required";
             const code: string = "BAD_REQ";
-            errors.push(new Errors.Err(msg, { code }));
+            errors.push(new Errors.Err(msg, { code, widget: "search" }));
             return new Errors.ErrResult(errors);
         }
 
@@ -419,10 +424,26 @@ export class LendingLibrary {
     checkoutBook(req: Record<string, any>): Errors.Result<void> {
         const errors: Errors.Err[] = [];
         const { patronId, isbn } = req;
+        if (!patronId) {
+            const msg: string = "property patronid is required";
+            const widget: string = "patronid";
+            const code: string = "MISSING";
+            errors.push(new Errors.Err(msg, { code, widget }));
+        }
+        if (!isbn) {
+            const msg: string = "property isbn is required";
+            const widget: string = "isbn";
+            const code: string = "MISSING";
+            errors.push(new Errors.Err(msg, { code, widget }));
+        }
+        if (errors.length > 0) {
+            return new Errors.ErrResult(errors);
+        }
         if (!this.bookMap[isbn]) {
-            const msg: string = "Invalid book isbn entered";
+            const msg: string = `unknown book ${isbn}`;
             const code: string = "BAD_REQ";
-            errors.push(new Errors.Err(msg, { code }));
+            const widget: string = "isbn";
+            errors.push(new Errors.Err(msg, { code, widget }));
             return new Errors.ErrResult(errors);
         }
 
@@ -432,9 +453,10 @@ export class LendingLibrary {
          */
 
         if (this.trackPatrons[isbn].includes(patronId)) {
-            const msg: string = "The patron already has this book checked out!";
+            const msg: string = `patron ${patronId} already has book ${isbn} checked out`;
             const code: string = "BAD_REQ";
-            errors.push(new Errors.Err(msg, { code, widget: "isbn" }));
+            const widget: string = "isbn";
+            errors.push(new Errors.Err(msg, { code, widget }));
             return new Errors.ErrResult(errors);
         }
         /**
@@ -442,10 +464,11 @@ export class LendingLibrary {
          * Check if all the copies of the books are being exhausted. If yes, return an error.
          */
 
-        if (this.bookMap[isbn].nCopies === 0) {
-            const msg: string = "There are no copies left!";
+        if (this.bookMap[isbn].nCopies === this.trackPatrons[isbn].length) {
+            const msg: string = `no copies of book ${isbn} are available for checkout`;
             const code: string = "BAD_REQ";
-            errors.push(new Errors.Err(msg, { code }));
+            const widget: string = "isbn";
+            errors.push(new Errors.Err(msg, { code, isbn }));
             return new Errors.ErrResult(errors);
         }
 
@@ -453,7 +476,6 @@ export class LendingLibrary {
          * TODO:
          * If all the conditions are valid, update the trackBook data structure,
          */
-        this.bookMap[isbn].nCopies -= 1;
         if (this.trackBooks[patronId]) {
             this.trackBooks[patronId].push(isbn);
         } else {
@@ -483,9 +505,10 @@ export class LendingLibrary {
             !this.trackBooks[patronId].includes(isbn) ||
             !this.trackPatrons[isbn].includes(patronId)
         ) {
-            const msg: string = "Invalid return";
+            const msg: string = `no checkout of book ${isbn} by patron ${patronId}`;
             const code: string = "BAD_REQ";
-            errors.push(new Errors.Err(msg, { code }));
+            const widget: string = "isbn";
+            errors.push(new Errors.Err(msg, { code, widget }));
             return new Errors.ErrResult(errors);
         }
 
@@ -499,7 +522,6 @@ export class LendingLibrary {
 
         const patrons: PatronId[] = this.trackPatrons[isbn];
         this.trackPatrons[isbn] = patrons.filter((key) => key !== patronId);
-        this.bookMap[isbn].nCopies += 1;
 
         //TODO
         return Errors.VOID_RESULT; //placeholder
