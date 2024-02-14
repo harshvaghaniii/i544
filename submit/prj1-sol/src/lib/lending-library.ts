@@ -165,7 +165,7 @@ export class LendingLibrary {
         // Checking if Authors is an array field
 
         if (!Array.isArray(authors)) {
-            const msg = "Authors must be an array of string";
+            const msg = "authors must have type string[]";
             errors.push(
                 new Errors.Err(msg, { code: "BAD_TYPE", widget: "authors" })
             );
@@ -468,7 +468,7 @@ export class LendingLibrary {
             const msg: string = `no copies of book ${isbn} are available for checkout`;
             const code: string = "BAD_REQ";
             const widget: string = "isbn";
-            errors.push(new Errors.Err(msg, { code, isbn }));
+            errors.push(new Errors.Err(msg, { code, widget }));
             return new Errors.ErrResult(errors);
         }
 
