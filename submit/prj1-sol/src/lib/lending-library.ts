@@ -97,7 +97,7 @@ export class LendingLibrary {
                 new Errors.Err(msg, { code: "MISSING", widget: "authors" })
             );
         }
-        if (!pages) {
+        if (typeof pages === "undefined") {
             error.push("pages");
         }
         if (!year) {
