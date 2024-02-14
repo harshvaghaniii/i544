@@ -85,27 +85,25 @@ export class LendingLibrary {
         const year: number = req.year;
         const publisher: string = req.publisher;
         const nCopies: number = req.nCopies || 1;
-        if (typeof isbn === "undefined") {
+        if (!isbn) {
             error.push("isbn");
         }
-        if (typeof title === "undefined") {
+        if (!title) {
             error.push("title");
         }
-        if (typeof authors === "undefined") {
+        if (!authors) {
             const msg = "Authors is missing";
             errors.push(
                 new Errors.Err(msg, { code: "MISSING", widget: "authors" })
             );
         }
-        if (typeof pages === "undefined") {
-            console.log("here", pages);
-
+        if (!pages) {
             error.push("pages");
         }
-        if (typeof year === "undefined") {
+        if (!year) {
             error.push("year");
         }
-        if (typeof publisher === "undefined") {
+        if (!publisher) {
             error.push("publisher");
         }
         for (let widget of widgets) {
