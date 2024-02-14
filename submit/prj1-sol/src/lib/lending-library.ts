@@ -143,15 +143,6 @@ export class LendingLibrary {
             return new Errors.ErrResult(errors);
         }
 
-        // Checking if nCopies is an Integer field
-
-        // if (nCopies !== Math.floor(nCopies)) {
-        //     const msg: string = `nCopies must be an integer field!`;
-        //     const widget: string = "nCopies";
-        //     errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
-        //     return new Errors.ErrResult(errors);
-        // }
-
         // Checking for an empty author array
 
         if (authors.length == 0) {
