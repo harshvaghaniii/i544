@@ -145,12 +145,12 @@ export class LendingLibrary {
 
         // Checking if nCopies is an Integer field
 
-        if (nCopies !== Math.floor(nCopies)) {
-            const msg: string = `nCopies must be an integer field!`;
-            const widget: string = "nCopies";
-            errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
-            return new Errors.ErrResult(errors);
-        }
+        // if (nCopies !== Math.floor(nCopies)) {
+        //     const msg: string = `nCopies must be an integer field!`;
+        //     const widget: string = "nCopies";
+        //     errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
+        //     return new Errors.ErrResult(errors);
+        // }
 
         // Checking for an empty author array
 
@@ -208,18 +208,18 @@ export class LendingLibrary {
         if (nCopies && nCopies != Math.floor(nCopies)) {
             const msg: string = `property nCopies must be Integer`;
             const widget: string = "nCopies";
-            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+            errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
             // return new Errors.ErrResult(errors);
         }
         if (year != Math.floor(year)) {
             const msg: string = `property year must be Integer`;
             const widget: string = "year";
-            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+            errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
         }
         if (pages != Math.floor(pages)) {
             const msg: string = `property pages must be Integer`;
             const widget: string = "pages";
-            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+            errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
         }
         if (errors.length > 0) {
             return new Errors.ErrResult(errors);
