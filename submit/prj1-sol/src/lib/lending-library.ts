@@ -211,13 +211,18 @@ export class LendingLibrary {
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
             // return new Errors.ErrResult(errors);
         }
-        if (errors.length > 0) {
-            return new Errors.ErrResult(errors);
-        }
         if (year != Math.floor(year)) {
             const msg: string = `property year must be Integer`;
             const widget: string = "year";
             errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+        }
+        if (pages != Math.floor(pages)) {
+            const msg: string = `property pages must be Integer`;
+            const widget: string = "pages";
+            errors.push(new Errors.Err(msg, { code: "BAD_TYPE", widget }));
+        }
+        if (errors.length > 0) {
+            return new Errors.ErrResult(errors);
         }
         if ((req.nCopies && req.nCopies < 0) || req.nCopies == 0) {
             const msg = `nCopies must be positive`;
@@ -225,7 +230,21 @@ export class LendingLibrary {
             errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
             return new Errors.ErrResult(errors);
         }
-
+        if (pages < 0 || pages == 0) {
+            const msg = `pages must be positive`;
+            const widget: string = "pages";
+            errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
+            return new Errors.ErrResult(errors);
+        }
+        if (year < 0 || year == 0) {
+            const msg = `year must be positive`;
+            const widget: string = "year";
+            errors.push(new Errors.Err(msg, { code: "BAD_REQ", widget }));
+            return new Errors.ErrResult(errors);
+        }
+        if (errors.length > 0) {
+            return new Errors.ErrResult(errors);
+        }
         // return Errors.errResult("TODO"); //placeholder
         if (error.length === 0) {
             const userBook: Record<ISBN, XBook> = {
