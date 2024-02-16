@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+# cwd == /autograder
+
+SRC=source
+
+echo "Using following versions"
+python3 --version
+echo -n "node "; node --version
+echo -n "ts-node "; ts-node --version
+jq --version
+echo
+
+
+mkdir submission/tmp
+chown -R student:students submission
+
+runuser -u student $SRC/do-autograde.sh
+
+mv submission/results.json results
+
+
