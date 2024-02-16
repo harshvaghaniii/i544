@@ -129,7 +129,7 @@ function isPermutation(list: number[], perms: number[]): boolean {
     return newList.sort().join(",") === newPerm.sort().join(",");
 }
 
-if (true) {
+if (false) {
     logTests("isPermutation", [
         () => isPermutation([1, 3, 2], [1, 2, 3]),
         () => isPermutation([2, 3, 4], [2, 3, 4]),
@@ -141,12 +141,16 @@ if (true) {
     ]);
 }
 
-/** #6: "5-points"
+/** #6: "5-points"`
  *  Given a number x and an integer n >= 0, return x**n
  *  without using **.
  */
 function pow(x: number, n: number): number {
-    return TODO;
+    const arr: number[] = new Array(n).fill(x);
+    return arr.reduce(
+        (accumulator, currentValue) => accumulator * currentValue,
+        1
+    );
 }
 
 if (false) {
