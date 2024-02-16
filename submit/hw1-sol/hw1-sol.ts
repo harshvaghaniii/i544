@@ -65,7 +65,7 @@ if (false) {
 function getCapitalizedWords(str: string): string[] {
     return str
         .split(/\W+/)
-        .filter((word) => word.length > 1 && /[A-Z]/.test(word));
+        .filter((word) => word.length > 1 && /^[A-Z]/.test(word));
 }
 
 if (false) {
@@ -83,7 +83,12 @@ if (false) {
  *  immediately follows a lower-case letter a-z.
  */
 function getCamelCasedWords(str: string): string[] {
-    return ["TODO"];
+    return str
+        .split(/\W+/)
+        .filter(
+            (word) =>
+                word.length > 1 && /^[A-Za-z]+(?:[A-Z][a-z]*)*$/.test(word)
+        );
 }
 
 if (false) {
@@ -100,7 +105,12 @@ if (false) {
  *  [1, 2, ..., (n-1), n, (n-1), ..., 2, ].
  */
 function upDown1n1(n: number): number[] {
-    return [TODO];
+    const first_array: number[] = Array.from(
+        { length: n },
+        (_, index: number) => index + 1
+    );
+    const second_array = first_array.slice(0, first_array.length - 1).reverse();
+    return first_array.concat(second_array);
 }
 
 if (false) {
@@ -116,7 +126,10 @@ if (false) {
  *  perms is a permutation of it.
  */
 function isPermutation(list: number[], perms: number[]): boolean {
-    return !!"TODO";
+    const newList: number[] = list.map((n) => n);
+    const newPerm: number[] = perms.map((n) => n);
+
+    return newList.sort().join() === newPerm.sort().join();
 }
 
 if (false) {
