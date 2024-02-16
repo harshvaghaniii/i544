@@ -85,10 +85,7 @@ if (false) {
 function getCamelCasedWords(str: string): string[] {
     return str
         .split(/\W+/)
-        .filter(
-            (word) =>
-                word.length > 1 && /^[A-Za-z]+(?:[A-Z][a-z]*)*$/.test(word)
-        );
+        .filter((word) => word.length > 1 && /[a-z][A-Z]/.test(word));
 }
 
 if (false) {
@@ -126,13 +123,13 @@ if (false) {
  *  perms is a permutation of it.
  */
 function isPermutation(list: number[], perms: number[]): boolean {
-    const newList: number[] = list.map((n) => n);
-    const newPerm: number[] = perms.map((n) => n);
+    const newList: number[] = [...list];
+    const newPerm: number[] = [...perms];
 
-    return newList.sort().join() === newPerm.sort().join();
+    return newList.sort().join(",") === newPerm.sort().join(",");
 }
 
-if (false) {
+if (true) {
     logTests("isPermutation", [
         () => isPermutation([1, 3, 2], [1, 2, 3]),
         () => isPermutation([2, 3, 4], [2, 3, 4]),
