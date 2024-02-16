@@ -1,0 +1,36 @@
+Programming HW:
+
+Solve the 12 functions provided in hw1-sol.ts
+
+--------------------------------------------------
+
+
+PDF Questions:
+1. Atomic Transactions
+
+2. Using a code in Javascript to perform web crawler to analyze the markdown.
+
+3. 
+
+
+---------Submission Guidelines---------------
+
+
+Important Reminder: As per the course Academic Honesty Statement, cheating of any kind will minimally result in your letter grade for the entire course being reduced by one level.
+
+To be turned in as a zip file using the Homework 1 submission link on gradescope. When unpacked, the zip file must create a hw1-sol directory such that:
+
+hw1-sol/hw1-sol.pdf
+This PDF file must contain the solution to the four questions specified in this document. You can create this file using any software of your choice.
+
+hw1-sol/hw1-sol.ts
+This TypeScript file must contain runnable code for 12 functions. The provided hw1-sol directory contains a skeleton starter file which provides the specifications for the required functions.
+
+The submitted file must have all its conditional logging turned on so that running the file results in this linked LOG. Specifically, all the conditional logging should be turned on as in:
+
+    if (true) {
+      logTests('...', [ 
+      ...
+      ]);
+    }
+The if-condition must be true.
