@@ -200,9 +200,12 @@ if (false) {
  *
  *  Return the value of the number represented by list bDigits using
  *  base b.
+ * TODO: Done
  */
 function digitsNumberValueInBase(b: number, bDigits: number[]): number {
-    return TODO;
+    return bDigits.reduce((result, item, index) => {
+        return result + item * pow(b, index);
+    }, 0);
 }
 
 if (false) {
@@ -299,7 +302,7 @@ function e(n: number): number {
     );
 }
 
-if (true) {
+if (false) {
     logTests("e", [() => e(6)]);
 }
 
