@@ -229,9 +229,14 @@ if (false) {
  */
 // *Hint*: use charCodeAt() <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charCodeAt>
 function bStringValue(bString: string, b: number): number {
-    return TODO;
+    return digitsNumberValueInBase(
+        b,
+        bString
+            .split("")
+            .reverse()
+            .map((num) => parseInt(num, b) || 0)
+    );
 }
-
 if (false) {
     logTests("bStringValue", [
         () => bStringValue("123", 10),
