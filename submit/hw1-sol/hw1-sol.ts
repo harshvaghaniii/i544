@@ -61,6 +61,7 @@ if (false) {
  *  Note that for this exercise and subsequent exercises, a word is
  *  defined to be a maximal sequence of length > 1 containing
  *  consecutive \w characters.
+ * TODO: Done
  */
 function getCapitalizedWords(str: string): string[] {
     return str
@@ -81,6 +82,7 @@ if (false) {
  #  Return all words in str which start with are camel-cased.
  *  A word is defined to be camel-cased if an uppercase letter A-Z
  *  immediately follows a lower-case letter a-z.
+ * TODO: Done
  */
 function getCamelCasedWords(str: string): string[] {
     return str
@@ -100,6 +102,7 @@ if (false) {
 /** #4: "5-points"
  *  Given a positive integer n > 0, return the list
  *  [1, 2, ..., (n-1), n, (n-1), ..., 2, ].
+ * TODO: Done
  */
 function upDown1n1(n: number): number[] {
     const first_array: number[] = Array.from(
@@ -121,6 +124,7 @@ if (false) {
 /** #5: "5-points"
  *  Given a list of distinct numbers, return true iff
  *  perms is a permutation of it.
+ * TODO: Done
  */
 function isPermutation(list: number[], perms: number[]): boolean {
     const newList: number[] = [...list];
@@ -144,6 +148,7 @@ if (false) {
 /** #6: "5-points"`
  *  Given a number x and an integer n >= 0, return x**n
  *  without using **.
+ * TODO: Done
  */
 function pow(x: number, n: number): number {
     const arr: number[] = new Array(n).fill(x);
@@ -166,10 +171,14 @@ if (false) {
  *  Return x ** x ** x ** ... ** x with h x's.
  *  (i.e. the tetration of x to height h; see
  *  <https://en.wikipedia.org/wiki/Tetration>
+ * TODO: Done
  */
 // Hint: the JS ** operator is right associative
 function tetrate(x: number, h: number): number {
-    return TODO;
+    return Array.from({ length: h }, () => x).reduce(
+        (accumulator, currentValue) => pow(currentValue, accumulator),
+        1
+    );
 }
 
 if (false) {
@@ -233,9 +242,12 @@ if (false) {
 /** #10: "9-points"
  *  Given a list ls of 2n elements, return a n-element
  *  list of the consecutive pairs of ls.
+ * TODO: Done
  */
 function listPairs<T>(ls: T[]): T[][] {
-    return []; //TODO
+    return ls
+        .slice(0, ls.length / 2)
+        .map((item, index) => [ls[index * 2], ls[index * 2 + 1]]);
 }
 
 if (false) {
@@ -252,10 +264,13 @@ if (false) {
 /** #11: "5-points"
  *  Given a list ls of n*m elements, return a m-element
  *  list of the consecutive n-tuples of ls.
+ * TODO: Done
  */
 // *Hint*: this is merely a generalization of the previous exercise
 function nTuples<T>(ls: T[], n: number): T[][] {
-    return []; //TODO
+    return Array.from({ length: ls.length / n }, (_, i) =>
+        ls.slice(i * n, (i + 1) * n)
+    );
 }
 
 if (false) {
@@ -275,13 +290,28 @@ if (false) {
  *  Return the value of e approximated as the sum of 1/k! for
  *  k in 1, 2, 3, ..., n.
  *  See <https://en.wikipedia.org/wiki/E_(mathematical_constant)>
+ * TODO: Done
  */
 function e(n: number): number {
-    return TODO;
+    return Array.from({ length: n }, (value, index) => index + 1).reduce(
+        (eulerValue, item) => eulerValue + 1 / factorial(item),
+        1
+    );
 }
 
-if (false) {
+if (true) {
     logTests("e", [() => e(6)]);
+}
+
+/**
+ * Util function: factorial
+ */
+
+function factorial(n: number): number {
+    return Array.from({ length: n }, (_, index) => index + 1).reduce(
+        (fact, number) => fact * number,
+        1
+    );
 }
 
 // RETAIN STUFF BELOW
