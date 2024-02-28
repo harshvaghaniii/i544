@@ -45,11 +45,15 @@ export class LendingLibrary {
      *      inconsistent with the data already present.
      */
     async addBook(req: Record<string, any>): Promise<Errors.Result<Lib.XBook>> {
-        const data: Errors.Result<Lib.XBook> = validate("addBook", req);
-        if (!data.isOk) {
-            return Errors.errResult(data);
+        const bookResult: Errors.Result<Lib.XBook> = validate("addBook", req);
+        if (!bookResult.isOk) {
+            return Errors.errResult(bookResult);
         }
-        return Errors.okResult(data.val);
+        //TODO: Add the code to use Dao and add the book to database
+
+        
+
+        return Errors.okResult(bookResult.val);
     }
 
     /** Return all books whose authors and title fields contain all
@@ -74,6 +78,7 @@ export class LendingLibrary {
     async findBooks(
         req: Record<string, any>
     ): Promise<Errors.Result<Lib.XBook[]>> {
+        const searchQuery = req.search ? req.search.trim().toLowerCase() : "";
         return Errors.errResult("TODO");
     }
 
