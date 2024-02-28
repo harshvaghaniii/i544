@@ -38,7 +38,13 @@ const Book = z.object({
     nCopies: z.number().int().positive().optional(),
 });
 
+const Patreon = z.object({
+    id: z.string(),
+    books: z.array(z.string().regex(/^\d{3}-\d{3}-\d{3}-\d$/)),
+});
+
 export type Book = z.infer<typeof Book>;
+export type Patreon = z.infer<typeof Patreon>;
 
 const XBook = Book.required();
 export type XBook = z.infer<typeof XBook>;
