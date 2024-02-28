@@ -7,8 +7,8 @@ import { text } from "stream/consumers";
 
 //TODO: define any DB specific types if necessary
 type DbBook = Lib.XBook & { _id: string };
-type DbPatreon = Lib.Patreon;
 type NextId = { _id: string; count: number };
+type DbTracker = Lib.Lend;
 
 export async function makeLibraryDao(dbUrl: string) {
     return await LibraryDao.make(dbUrl);
@@ -25,7 +25,7 @@ export class LibraryDao {
     constructor(
         private readonly client: mongo.MongoClient,
         private readonly books: mongo.Collection<DbBook>,
-        private readonly patreons: mongo.Collection<DbPatreon>,
+        private readonly tracker: mongo.Collection<DbTracker>,
         private readonly nextId: mongo.Collection<NextId>
     ) {}
 
@@ -41,7 +41,7 @@ export class LibraryDao {
             ).connect();
             const db = client.db();
             const books = db.collection<DbBook>(BOOKS_COLLECTION);
-            const patreons = db.collection<DbPatreon>(PATREONS_COLLECTION);
+            const tracker = db.collection<DbTracker>(PATREONS_COLLECTION);
             const nextId = db.collection<NextId>(NEXT_ID_COLLECTION);
             await books.createIndex({
                 title: "text",
@@ -49,7 +49,7 @@ export class LibraryDao {
             });
             await books.createIndex("isbn");
             return Errors.okResult(
-                new LibraryDao(client, books, patreons, nextId)
+                new LibraryDao(client, books, tracker, nextId)
             );
         } catch (error) {
             return Errors.errResult(error.message, "DB");
@@ -61,7 +61,7 @@ export class LibraryDao {
      */
 
     async addBook(book: Lib.XBook): Promise<Errors.Result<DbBook>> {
-        const bookID = await this.#nextUserId();
+        const bookID = await this.#nextBookID();
         const registeredBook: DbBook = { _id: bookID, ...book };
         const dbObj = { ...registeredBook };
         try {
@@ -97,19 +97,14 @@ export class LibraryDao {
 
     /**
      * async function to increase the number of ncopies of a book
-     * If count = 1, increment copies
-     * If count = -1, decrement copies
      */
 
-    async updateBookCopies(
-        bookID: string,
-        count: number
-    ): Promise<Errors.Result<Lib.Book>> {
+    async updateBookCopies(bookID: string): Promise<Errors.Result<Lib.Book>> {
         const collection = this.books;
         try {
             const modifiedBook = await collection.updateOne(
                 { _id: bookID },
-                { $inc: { nCopies: count } }
+                { $inc: { nCopies: 1 } }
             );
             return Errors.okResult(modifiedBook) as Errors.Result<Lib.Book>;
         } catch (error) {
@@ -157,6 +152,37 @@ export class LibraryDao {
         }
     }
 
+    /**
+     * Async function that returns all the books of a given isbn
+     */
+
+    async validateCheckoutRequest(
+        isbn: string,
+        patronID: string
+    ): Promise<boolean> {
+        const collection = this.tracker;
+        try {
+            const bookCursor = await collection.find({ isbn }).toArray();
+            if (!bookCursor) return true;
+            const patronCursor = await collection.find({ isbn }).toArray();
+            const book: Errors.Result<DbBook> = await this.findByISBN(isbn);
+            let nCopies: number;
+            if (book.isOk) {
+                nCopies = book.val.nCopies;
+            }
+            if (nCopies === bookCursor.length) {
+                return false;
+            }
+            const isPatreonPresent = bookCursor.some(
+                (obj) => obj.patronId == patronID
+            );
+            if (isPatreonPresent) return false;
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
     /** clear all data in this DAO.
      *
      *  Error Codes:
@@ -165,7 +191,7 @@ export class LibraryDao {
     async clear(): Promise<Errors.Result<void>> {
         try {
             await this.books.deleteMany({});
-            await this.patreons.deleteMany({});
+            await this.tracker.deleteMany({});
             return Errors.VOID_RESULT;
         } catch (e) {
             return Errors.errResult(e.message, "DB");
@@ -187,7 +213,24 @@ export class LibraryDao {
         }
     }
 
-    async #nextUserId(): Promise<string> {
+    /**
+     * Async function to add the transaction to trackers
+     */
+
+    async updateTracker(
+        isbn: string,
+        patreonID: string
+    ): Promise<Errors.Result<void>> {
+        try {
+            const collection = this.tracker;
+            await collection.insertOne({ isbn, patronId: patreonID });
+            return Errors.VOID_RESULT;
+        } catch (error) {
+            return Errors.errResult(error.message, { code: "DB" });
+        }
+    }
+
+    async #nextBookID(): Promise<string> {
         const query = { _id: NEXT_ID_KEY };
         const update = { $inc: { [NEXT_ID_KEY]: 1 } };
         const options = {

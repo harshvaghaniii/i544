@@ -2,6 +2,7 @@ import { Errors } from "cs544-js-utils";
 import { LibraryDao } from "./library-dao.js";
 import * as Lib from "./library.js";
 import { validate } from "./library.js";
+import { boolean } from "zod";
 /** Note that errors are documented using the `code` option which must be
  *  returned (the `message` can be any suitable string which describes
  *  the error as specifically as possible).  Whenever possible, the
@@ -59,11 +60,9 @@ export class LendingLibrary {
             const {
                 title: uTitle,
                 authors: uAuthors,
-                isbn: uIsbn,
                 pages: uPages,
                 year: uYear,
                 publisher: uPublisher,
-                nCopies: uNcopies,
             } = findResult.val;
             if (
                 title === uTitle &&
@@ -72,7 +71,7 @@ export class LendingLibrary {
                 year === uYear &&
                 publisher === uPublisher
             ) {
-                this.dao.updateBookCopies(findResult.val._id, 1);
+                this.dao.updateBookCopies(findResult.val._id);
             } else {
                 const msg: string =
                     "Data entered is inconsistent with the existing data in the library";
@@ -82,20 +81,17 @@ export class LendingLibrary {
                 return new Errors.ErrResult(errors);
             }
         }
-        if (!findResult.isOk) {
-            await this.dao.addBook({
-                isbn,
-                title,
-                authors,
-                pages,
-                year,
-                publisher,
-                nCopies,
-            });
-        }
-        const returnBook = await this.dao.findByISBN(isbn);
-        if (returnBook.isOk) {
-            return Errors.okResult(returnBook.val);
+        const newBook = await this.dao.addBook({
+            isbn,
+            title,
+            authors,
+            pages,
+            year,
+            publisher,
+            nCopies,
+        });
+        if (newBook.isOk) {
+            return Errors.okResult(newBook.val);
         } else {
             const msg: string = "Some unexpected error occurred";
             const code: string = "UNEXPECTED_ERROR";
@@ -166,6 +162,22 @@ export class LendingLibrary {
         if (!missingErrors.isOk) {
             return Errors.errResult(missingErrors);
         }
+        const { patronId, isbn } = req;
+        const isValidBook = await this.dao.findByISBN(isbn);
+        if (!isValidBook.isOk) {
+            return Errors.errResult("The isbn provided is incorrect", {
+                code: "BAD_REQ",
+            });
+        }
+        const isValidCheckout: boolean = await this.dao.validateCheckoutRequest(
+            isbn,
+            patronId
+        );
+        if (isValidCheckout) {
+            await this.dao.updateTracker(isbn, patronId);
+            return Errors.VOID_RESULT;
+        }
+
         return Errors.errResult("TODO");
     }
 
