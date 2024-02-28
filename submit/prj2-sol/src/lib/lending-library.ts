@@ -55,7 +55,6 @@ export class LendingLibrary {
         }
         const findResult = await this.dao.findByISBN(isbn);
         if (findResult.isOk) {
-            console.log(`Here: ${JSON.stringify(findResult)}`);
             this.dao.updateBookCopies(findResult.val._id, 1);
         }
         if (!findResult.isOk) {
