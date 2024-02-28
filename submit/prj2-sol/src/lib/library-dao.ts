@@ -6,8 +6,9 @@ import * as Lib from "./library.js";
 import { text } from "stream/consumers";
 
 //TODO: define any DB specific types if necessary
-type DbBook = Lib.XBook;
+type DbBook = Lib.XBook & { _id: string };
 type DbPatreon = Lib.Patreon;
+type NextId = { _id: string; count: number };
 
 export async function makeLibraryDao(dbUrl: string) {
     return await LibraryDao.make(dbUrl);
@@ -24,7 +25,8 @@ export class LibraryDao {
     constructor(
         private readonly client: mongo.MongoClient,
         private readonly books: mongo.Collection<DbBook>,
-        private readonly patreons: mongo.Collection<DbPatreon>
+        private readonly patreons: mongo.Collection<DbPatreon>,
+        private readonly nextId: mongo.Collection<NextId>
     ) {}
 
     //static factory function; should do all async operations like
@@ -40,8 +42,11 @@ export class LibraryDao {
             const db = client.db();
             const books = db.collection<DbBook>(BOOKS_COLLECTION);
             const patreons = db.collection<DbPatreon>(PATREONS_COLLECTION);
+            const nextId = db.collection<NextId>(NEXT_ID_COLLECTION);
             await books.createIndex({ title: "text", authors: "text" });
-            return Errors.okResult(new LibraryDao(client, books, patreons));
+            return Errors.okResult(
+                new LibraryDao(client, books, patreons, nextId)
+            );
         } catch (error) {
             return Errors.errResult(error.message, "DB");
         }
@@ -51,8 +56,9 @@ export class LibraryDao {
      * Asynchronous function to add a Book
      */
 
-    async add(book: Lib.Book): Promise<Errors.Result<Lib.Book>> {
-        const registeredBook: Lib.Book = { ...book };
+    async addBook(book: Lib.XBook): Promise<Errors.Result<DbBook>> {
+        const bookID = await this.#nextUserId();
+        const registeredBook: DbBook = { _id: bookID, ...book };
         const dbObj = { ...registeredBook };
         try {
             const collection = this.books;
@@ -67,12 +73,16 @@ export class LibraryDao {
      * Async method to find the book using isbn
      */
 
-    async findByISBN(isbn: string): Promise<Errors.Result<Lib.Book>> {
+    async findByISBN(isbn: string): Promise<Errors.Result<DbBook>> {
         try {
             const collection = this.books;
             const book = await collection.findOne({ isbn });
             if (book) {
                 return Errors.okResult(book);
+            } else {
+                return Errors.errResult(`Book with ${isbn} not found!!,`, {
+                    code: "NOT_FOUND",
+                });
             }
         } catch (error) {
             return Errors.errResult(`Book with '${isbn}' not found!!`, {
@@ -88,7 +98,7 @@ export class LibraryDao {
      */
 
     async updateBookCopies(
-        bookID: mongo.ObjectId,
+        bookID: string,
         count: number
     ): Promise<Errors.Result<Lib.Book>> {
         const collection = this.books;
@@ -102,6 +112,43 @@ export class LibraryDao {
             return Errors.errResult(`Book with '${bookID} not found!'`, {
                 code: "NOT_FOUND",
             });
+        }
+    }
+
+    /**
+     * Async function that will be used to findBooks based on the preprocessed search string
+     */
+
+    async findBooks(query: string): Promise<Errors.Result<Lib.Book[]>> {
+        const collection = this.books;
+        try {
+            const formattedSearchQuery = '"' + query + '"';
+            const searchSpec = {
+                $text: {
+                    $search: formattedSearchQuery,
+                },
+            };
+            const cursor = await collection.find(searchSpec).toArray();
+            return Errors.okResult(cursor);
+        } catch (error) {
+            return Errors.errResult("Invalid search query", {
+                code: "INVALID",
+            });
+        }
+    }
+
+    /** clear all data in this DAO.
+     *
+     *  Error Codes:
+     *    DB: a database error was encountered.
+     */
+    async clear(): Promise<Errors.Result<void>> {
+        try {
+            await this.books.deleteMany({});
+            await this.patreons.deleteMany({});
+            return Errors.VOID_RESULT;
+        } catch (e) {
+            return Errors.errResult(e.message, "DB");
         }
     }
 
@@ -120,7 +167,25 @@ export class LibraryDao {
         }
     }
 
+    async #nextUserId(): Promise<string> {
+        const query = { _id: NEXT_ID_KEY };
+        const update = { $inc: { [NEXT_ID_KEY]: 1 } };
+        const options = {
+            upsert: true,
+            returnDocument: mongo.ReturnDocument.AFTER,
+        };
+        const ret = await this.nextId.findOneAndUpdate(query, update, options);
+        const seq = ret[NEXT_ID_KEY];
+        return (
+            String(seq) + Math.random().toFixed(RAND_LEN).replace(/^0\./, "_")
+        );
+    }
     //add methods as per your API
 } //class LibDao
 const BOOKS_COLLECTION = "books";
 const PATREONS_COLLECTION = "patreons";
+const DEFAULT_COUNT = 5;
+
+const NEXT_ID_COLLECTION = "nextId";
+const NEXT_ID_KEY = "count";
+const RAND_LEN = 2;

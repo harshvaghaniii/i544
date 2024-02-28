@@ -1,5 +1,4 @@
 import { Errors } from "cs544-js-utils";
-
 import { LibraryDao } from "./library-dao.js";
 import * as Lib from "./library.js";
 import { validate } from "./library.js";
@@ -24,7 +23,7 @@ export class LendingLibrary {
 
     /** clear out underlying db */
     async clear(): Promise<Errors.Result<void>> {
-        return Errors.errResult("TODO");
+        return this.dao.clear();
     }
 
     /** Add one-or-more copies of book represented by req to this library.
@@ -50,10 +49,40 @@ export class LendingLibrary {
             return Errors.errResult(bookResult);
         }
         //TODO: Add the code to use Dao and add the book to database
-
-        
-
-        return Errors.okResult(bookResult.val);
+        let { isbn, title, authors, pages, year, publisher, nCopies } = req;
+        if (!nCopies) {
+            nCopies = 1;
+        }
+        const findResult = await this.dao.findByISBN(isbn);
+        if (findResult.isOk) {
+            console.log(`Here: ${JSON.stringify(findResult)}`);
+            this.dao.updateBookCopies(findResult.val._id, 1);
+        }
+        if (!findResult.isOk) {
+            await this.dao.addBook({
+                isbn,
+                title,
+                authors,
+                pages,
+                year,
+                publisher,
+                nCopies,
+            });
+        }
+        // this.dao.updateBookCopies(findResult.val._id);
+        const returnBook = await this.dao.findByISBN(isbn);
+        if (returnBook.isOk) {
+            return Errors.okResult(returnBook.val);
+        }
+        // return Errors.okResult({
+        //     isbn,
+        //     title,
+        //     authors,
+        //     pages,
+        //     year,
+        //     publisher,
+        //     nCopies,
+        // });
     }
 
     /** Return all books whose authors and title fields contain all
