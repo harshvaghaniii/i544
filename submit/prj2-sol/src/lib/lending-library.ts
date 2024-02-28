@@ -44,6 +44,7 @@ export class LendingLibrary {
      *      inconsistent with the data already present.
      */
     async addBook(req: Record<string, any>): Promise<Errors.Result<Lib.XBook>> {
+        const errors: Errors.Err[] = [];
         const bookResult: Errors.Result<Lib.XBook> = validate("addBook", req);
         if (!bookResult.isOk) {
             return Errors.errResult(bookResult);
@@ -55,7 +56,31 @@ export class LendingLibrary {
         }
         const findResult = await this.dao.findByISBN(isbn);
         if (findResult.isOk) {
-            this.dao.updateBookCopies(findResult.val._id, 1);
+            const {
+                title: uTitle,
+                authors: uAuthors,
+                isbn: uIsbn,
+                pages: uPages,
+                year: uYear,
+                publisher: uPublisher,
+                nCopies: uNcopies,
+            } = findResult.val;
+            if (
+                title === uTitle &&
+                arraysEqual(authors, uAuthors) &&
+                pages === uPages &&
+                year === uYear &&
+                publisher === uPublisher
+            ) {
+                this.dao.updateBookCopies(findResult.val._id, 1);
+            } else {
+                const msg: string =
+                    "Data entered is inconsistent with the existing data in the library";
+                const code: string = "BAD_REQ";
+                const widget: string = "inconsistent";
+                errors.push(new Errors.Err(msg, { code, widget }));
+                return new Errors.ErrResult(errors);
+            }
         }
         if (!findResult.isOk) {
             await this.dao.addBook({
@@ -68,20 +93,16 @@ export class LendingLibrary {
                 nCopies,
             });
         }
-        // this.dao.updateBookCopies(findResult.val._id);
         const returnBook = await this.dao.findByISBN(isbn);
         if (returnBook.isOk) {
             return Errors.okResult(returnBook.val);
+        } else {
+            const msg: string = "Some unexpected error occurred";
+            const code: string = "UNEXPECTED_ERROR";
+            const widget: string = "BOOK";
+            errors.push(new Errors.Err(msg, { code, widget }));
+            return new Errors.ErrResult(errors);
         }
-        // return Errors.okResult({
-        //     isbn,
-        //     title,
-        //     authors,
-        //     pages,
-        //     year,
-        //     publisher,
-        //     nCopies,
-        // });
     }
 
     /** Return all books whose authors and title fields contain all
@@ -106,8 +127,25 @@ export class LendingLibrary {
     async findBooks(
         req: Record<string, any>
     ): Promise<Errors.Result<Lib.XBook[]>> {
+        const findResult: Errors.Result<Lib.XBook> = validate("findBooks", req);
+        if (!findResult.isOk) {
+            return Errors.errResult(findResult);
+        }
+
         const searchQuery = req.search ? req.search.trim().toLowerCase() : "";
-        return Errors.errResult("TODO");
+        const words: string[] = searchQuery
+            .split(/\W+/)
+            .filter((word: string) => word.length > 1);
+
+        const processedSearchQuery: string = words
+            .map((word) => `"${word}"`)
+            .join(" ");
+        const res: Errors.Result<Lib.Book[]> = await this.dao.findBooks(
+            processedSearchQuery,
+            req.index,
+            req.count
+        );
+        return res;
     }
 
     /** Set up patron req.patronId to check out book req.isbn.
@@ -121,6 +159,13 @@ export class LendingLibrary {
      *      patron already has a copy of the same book checked out
      */
     async checkoutBook(req: Record<string, any>): Promise<Errors.Result<void>> {
+        const missingErrors: Errors.Result<Lib.XBook> = validate(
+            "checkoutBook",
+            req
+        );
+        if (!missingErrors.isOk) {
+            return Errors.errResult(missingErrors);
+        }
         return Errors.errResult("TODO");
     }
 
@@ -156,4 +201,26 @@ function compareBook(book0: Lib.Book, book1: Lib.Book): string | undefined {
     if (book0.pages !== book1.pages) return "pages";
     if (book0.year !== book1.year) return "year";
     if (book0.publisher !== book1.publisher) return "publisher";
+}
+
+//TODO: Utility function to check equality of arrays
+function arraysEqual<T>(array1: T[], array2: T[]): boolean {
+    // Check if the arrays have the same length
+    if (array1.length !== array2.length) {
+        return false;
+    }
+
+    // Sort both arrays
+    const sortedArray1 = array1.slice().sort();
+    const sortedArray2 = array2.slice().sort();
+
+    // Check each element of the sorted arrays
+    for (let i = 0; i < sortedArray1.length; i++) {
+        if (sortedArray1[i] !== sortedArray2[i]) {
+            return false; // Elements at position i are different
+        }
+    }
+
+    // All elements are the same
+    return true;
 }

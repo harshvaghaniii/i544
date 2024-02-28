@@ -43,7 +43,11 @@ export class LibraryDao {
             const books = db.collection<DbBook>(BOOKS_COLLECTION);
             const patreons = db.collection<DbPatreon>(PATREONS_COLLECTION);
             const nextId = db.collection<NextId>(NEXT_ID_COLLECTION);
-            await books.createIndex({ title: "text", authors: "text" });
+            await books.createIndex({
+                title: "text",
+                authors: "text",
+            });
+            await books.createIndex("isbn");
             return Errors.okResult(
                 new LibraryDao(client, books, patreons, nextId)
             );
@@ -119,17 +123,33 @@ export class LibraryDao {
      * Async function that will be used to findBooks based on the preprocessed search string
      */
 
-    async findBooks(query: string): Promise<Errors.Result<Lib.Book[]>> {
+    async findBooks(
+        query: string,
+        index?: number,
+        count?: number
+    ): Promise<Errors.Result<Lib.XBook[]>> {
         const collection = this.books;
+        const projection = { _id: false };
         try {
-            const formattedSearchQuery = '"' + query + '"';
+            const formattedSearchQuery = `'${query}'`;
             const searchSpec = {
                 $text: {
                     $search: formattedSearchQuery,
                 },
             };
-            const cursor = await collection.find(searchSpec).toArray();
-            return Errors.okResult(cursor);
+            let cursor = collection
+                .find(searchSpec, { projection })
+                .sort({ title: 1 });
+            let result: Lib.XBook[];
+            if (index !== undefined && count !== undefined) {
+                // Slice the cursor before converting it to array
+                const slicedCursor = cursor.skip(index).limit(count);
+                result = await slicedCursor.toArray();
+            } else {
+                // If index and count are not provided, convert the cursor to array directly
+                result = await cursor.toArray();
+            }
+            return Errors.okResult(result);
         } catch (error) {
             return Errors.errResult("Invalid search query", {
                 code: "INVALID",
