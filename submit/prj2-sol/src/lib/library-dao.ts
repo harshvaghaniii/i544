@@ -99,7 +99,7 @@ export class LibraryDao {
      * async function to increase the number of ncopies of a book
      */
 
-    async updateBookCopies(bookID: string): Promise<Errors.Result<Lib.Book>> {
+    async updateBookCopies(bookID: string): Promise<Errors.Result<Lib.XBook>> {
         const collection = this.books;
         try {
             const modifiedBook = await collection.updateOne(

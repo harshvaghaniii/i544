@@ -71,7 +71,13 @@ export class LendingLibrary {
                 year === uYear &&
                 publisher === uPublisher
             ) {
-                this.dao.updateBookCopies(findResult.val._id);
+                const modifiedBook = await this.dao.updateBookCopies(
+                    findResult.val._id
+                );
+                if (modifiedBook.isOk) {
+                    const book = await this.dao.findByISBN(isbn);
+                    if (book.isOk) return Errors.okResult(book.val);
+                }
             } else {
                 const msg: string =
                     "Data entered is inconsistent with the existing data in the library";
@@ -178,7 +184,10 @@ export class LendingLibrary {
             return Errors.VOID_RESULT;
         }
 
-        return Errors.errResult("TODO");
+        return Errors.errResult(
+            `patreon ${patronId} either already has the book ${isbn} checked out or there are no copies left!`,
+            { code: "BAD_REQ", widget: "isbn" }
+        );
     }
 
     /** Set up patron req.patronId to returns book req.isbn.
