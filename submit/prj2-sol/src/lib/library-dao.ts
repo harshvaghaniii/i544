@@ -183,6 +183,43 @@ export class LibraryDao {
         }
     }
 
+    /**
+     * Async function that will validate return request
+     */
+
+    async validateReturn(isbn: string, patronID: string): Promise<boolean> {
+        const collection = this.tracker;
+        try {
+            const record = await collection.findOne({
+                isbn: isbn,
+                patronId: patronID,
+            });
+            if (!record) {
+                return false;
+            }
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
+     * Async function to delete an information from tracker
+     */
+
+    async deleteRecord(
+        isbn: string,
+        patronID: string
+    ): Promise<Errors.Result<void>> {
+        const collection = this.tracker;
+        try {
+            await collection.findOneAndDelete({ isbn, patronId: patronID });
+            return Errors.VOID_RESULT;
+        } catch (error) {
+            return Errors.errResult("Some error occurred", { code: "BAD_REQ" });
+        }
+    }
+
     /** clear all data in this DAO.
      *
      *  Error Codes:

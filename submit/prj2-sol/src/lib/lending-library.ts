@@ -191,7 +191,26 @@ export class LendingLibrary {
      *    no checkout of the book by patronId.
      */
     async returnBook(req: Record<string, any>): Promise<Errors.Result<void>> {
-        return Errors.errResult("TODO");
+        const missingErrors: Errors.Result<Lib.XBook> = validate(
+            "checkoutBook",
+            req
+        );
+        if (!missingErrors.isOk) {
+            return Errors.errResult(missingErrors);
+        }
+        const { patronId, isbn } = req;
+        const isValidReturn: boolean = await this.dao.validateReturn(
+            isbn,
+            patronId
+        );
+        if (!isValidReturn) {
+            return Errors.errResult("Invalid return!", { code: "BAD_REQ" });
+        }
+        const data = await this.dao.deleteRecord(isbn, patronId);
+        if (data.isOk) {
+            return Errors.VOID_RESULT;
+        }
+        return Errors.errResult("Some error occured!", { code: "BAD_REQ" });
     }
 
     //add class code as needed
