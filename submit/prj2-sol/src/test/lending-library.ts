@@ -93,7 +93,7 @@ describe("lending library", () => {
             }
         });
 
-        it.only("must catch badly typed authors field", async () => {
+        it("must catch badly typed authors field", async () => {
             const book = BOOKS[0];
             const book1: Record<string, any> = { ...book };
             book1.authors = "hello";

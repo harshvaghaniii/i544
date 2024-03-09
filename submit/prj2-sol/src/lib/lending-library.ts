@@ -2,7 +2,6 @@ import { Errors } from "cs544-js-utils";
 import { LibraryDao } from "./library-dao.js";
 import * as Lib from "./library.js";
 import { validate } from "./library.js";
-import { boolean } from "zod";
 /** Note that errors are documented using the `code` option which must be
  *  returned (the `message` can be any suitable string which describes
  *  the error as specifically as possible).  Whenever possible, the
@@ -64,13 +63,8 @@ export class LendingLibrary {
                 year: uYear,
                 publisher: uPublisher,
             } = findResult.val;
-            if (
-                title === uTitle &&
-                arraysEqual(authors, uAuthors) &&
-                pages === uPages &&
-                year === uYear &&
-                publisher === uPublisher
-            ) {
+            const compareResult = compareBook(findResult.val, req);
+            if (!compareResult) {
                 const modifiedBook = await this.dao.updateBookCopies(
                     findResult.val._id
                 );
@@ -79,10 +73,9 @@ export class LendingLibrary {
                     if (book.isOk) return Errors.okResult(book.val);
                 }
             } else {
-                const msg: string =
-                    "Data entered is inconsistent with the existing data in the library";
+                const msg: string = `inconsistent ${compareResult} data for book ${isbn}`;
                 const code: string = "BAD_REQ";
-                const widget: string = "inconsistent";
+                const widget: string = compareResult;
                 errors.push(new Errors.Err(msg, { code, widget }));
                 return new Errors.ErrResult(errors);
             }
