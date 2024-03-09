@@ -99,14 +99,25 @@ export class LibraryDao {
      * async function to increase the number of ncopies of a book
      */
 
-    async updateBookCopies(bookID: string): Promise<Errors.Result<Lib.XBook>> {
+    async updateBookCopies(bookID: string): Promise<Errors.Result<DbBook>> {
         const collection = this.books;
         try {
-            const modifiedBook = await collection.updateOne(
+            // const modifiedBook = await collection.updateOne(
+            //     { _id: bookID },
+            //     { $inc: { nCopies: 1 } }
+            // );
+            const modifiedBook = await collection.findOneAndUpdate(
                 { _id: bookID },
-                { $inc: { nCopies: 1 } }
+                { $inc: { nCopies: 1 } },
+                { returnDocument: "after" }
             );
-            return Errors.okResult(modifiedBook) as Errors.Result<Lib.Book>;
+            if (modifiedBook) {
+                return Errors.okResult(modifiedBook);
+            } else {
+                return Errors.errResult(`Book with '${bookID} not found!'`, {
+                    code: "NOT_FOUND",
+                });
+            }
         } catch (error) {
             return Errors.errResult(`Book with '${bookID} not found!'`, {
                 code: "NOT_FOUND",
