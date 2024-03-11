@@ -66,7 +66,8 @@ export class LendingLibrary {
             const compareResult = compareBook(findResult.val, req);
             if (!compareResult) {
                 const modifiedBook = await this.dao.updateBookCopies(
-                    findResult.val._id
+                    findResult.val._id,
+                    nCopies
                 );
                 if (modifiedBook.isOk) {
                     const book = await this.dao.findByISBN(isbn);

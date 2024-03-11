@@ -99,16 +99,15 @@ export class LibraryDao {
      * async function to increase the number of ncopies of a book
      */
 
-    async updateBookCopies(bookID: string): Promise<Errors.Result<DbBook>> {
+    async updateBookCopies(
+        bookID: string,
+        nCopies: number
+    ): Promise<Errors.Result<DbBook>> {
         const collection = this.books;
         try {
-            // const modifiedBook = await collection.updateOne(
-            //     { _id: bookID },
-            //     { $inc: { nCopies: 1 } }
-            // );
             const modifiedBook = await collection.findOneAndUpdate(
                 { _id: bookID },
-                { $inc: { nCopies: 1 } },
+                { $inc: { nCopies: nCopies } },
                 { returnDocument: "after" }
             );
             if (modifiedBook) {

@@ -65,17 +65,18 @@ describe("library DAO", () => {
             }
         });
         it("must update the book copies with valid _id", async () => {
-            ISBNS.forEach(async (isbn) => {
+            for (const isbn of ISBNS) {
                 const book = await dao.findByISBN(isbn);
                 assert(book.isOk === true);
                 const _id = book.val._id;
-                const updateResult = await dao.updateBookCopies(_id);
+                const updateResult = await dao.updateBookCopies(_id, 2);
                 assert(updateResult.isOk === true);
-            });
+                assert(updateResult.val.nCopies === book.val.nCopies + 2);
+            }
         });
 
         it("must return an error with an invalid _id", async () => {
-            const bookResult = await dao.updateBookCopies("some invalid id");
+            const bookResult = await dao.updateBookCopies("some invalid id", 1);
             assert(bookResult.isOk === false);
         });
     });
