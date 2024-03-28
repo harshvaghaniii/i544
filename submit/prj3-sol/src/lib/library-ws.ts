@@ -17,6 +17,8 @@ import {
 	ErrorEnvelope,
 } from "./response-envelopes.js";
 
+type AddedBook = Lib.XBook;
+
 type RequestWithQuery = Express.Request & {
 	query: { [_: string]: string | string[] | number };
 };
@@ -59,12 +61,68 @@ function setupRoutes(app: Express.Application) {
 
 	//set up application routes
 	//TODO: set up application routes
-	app.get(`${base}/`, (req: Express.Request, res: Express.Response) => {
-		console.log("running");
-		res.json({
-			success: true,
-		});
-	});
+	// app.get(`${base}/`, (req: Express.Request, res: Express.Response) => {
+	// 	console.log("running");
+	// 	res.json({
+	// 		success: true,
+	// 	});
+	// });
+
+	app.put(`${base}/books`, doAddBook(app));
+	app.get(`${base}/books/:ISBN`, doGetBook(app));
+	// app.get(`${base}`, doFindBooks(app));
+	// app.delete(`${base}/:ISBN`, doDeleteBook(app));
+	// app.patch(`${base}/:userId`, doUpdateUser(app));
+	app.delete(`${base}`, doClear(app));
+
+	// Function to fetch the book using ISBN
+
+	function doGetBook(app: Express.Application) {
+		return async function (req: Express.Request, res: Express.Response) {
+			try {
+				const { ISBN } = req.params;
+				const result = await app.locals.model.getBook(ISBN);
+				if (!result.isOk) throw result;
+				const response = selfResult<AddedBook>(req, result.val);
+				res.json(response);
+			} catch (err) {
+				const mapped = mapResultErrors(err);
+				res.status(mapped.status).json(mapped);
+			}
+		};
+	}
+	// Function to add a book
+
+	function doAddBook(app: Express.Application) {
+		return async function (req: Express.Request, res: Express.Response) {
+			try {
+				const result = await app.locals.model.addBook(req.body);
+				if (!result.isOk) throw result;
+				const addedBook = result.val;
+				const { isbn } = addedBook;
+				res.location(selfHref(req, isbn));
+				const response = selfResult<AddedBook>(req, addedBook, STATUS.CREATED);
+				res.status(STATUS.CREATED).json(response);
+			} catch (err) {
+				const mapped = mapResultErrors(err);
+				res.status(mapped.status).json(mapped);
+			}
+		};
+	}
+
+	// Clearing the database
+	function doClear(app: Express.Application) {
+		return async function (req: Express.Request, res: Express.Response) {
+			try {
+				const result = await app.locals.model.clear();
+				if (!result.isOk) throw result;
+				res.json(selfResult<undefined>(req, undefined));
+			} catch (err) {
+				const mapped = mapResultErrors(err);
+				res.status(mapped.status).json(mapped);
+			}
+		};
+	}
 
 	//must be last
 	app.use(do404(app)); //custom handler for page not found
