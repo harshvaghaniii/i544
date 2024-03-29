@@ -41,7 +41,7 @@ describe("lending library web services", () => {
 		await memDao.tearDown();
 	});
 
-	describe.only("Add Book Web Service", () => {
+	describe("Add Book Web Service", () => {
 		const NUMERIC_FIELDS = ["pages", "year", "nCopies"];
 
 		it("must add valid book", async () => {
@@ -312,7 +312,7 @@ describe("lending library web services", () => {
 		});
 	});
 
-	describe.skip("Checkout Book Web Service with empty library", async () => {
+	describe.only("Checkout Book Web Service with empty library", async () => {
 		it("must error on missing field", async () => {
 			for (const f of ["isbn", "patronId"]) {
 				const v = f === "isnb" ? BOOKS[0].isbn : PATRONS[0];
@@ -339,7 +339,7 @@ describe("lending library web services", () => {
 		});
 	});
 
-	describe.skip("Checkout Book Web Service with populated library", async () => {
+	describe.only("Checkout Book Web Service with populated library", async () => {
 		beforeEach(async () => {
 			await loadAllBooks(ws);
 		});
