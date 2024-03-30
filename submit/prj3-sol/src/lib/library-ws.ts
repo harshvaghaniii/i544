@@ -115,11 +115,7 @@ function setupRoutes(app: Express.Application) {
 				const result = await app.locals.model.findBooks(q1);
 				if (!result.isOk) throw result;
 				const searchResult = result.val;
-				const response = pagedResult<RequestWithQuery>(
-					req,
-					"next",
-					searchResult
-				);
+				const response = pagedResult<AddedBook>(req, "isbn", searchResult);
 				res.json(response);
 			} catch (err) {
 				const mapped = mapResultErrors(err);
