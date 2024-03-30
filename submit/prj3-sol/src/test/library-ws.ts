@@ -221,7 +221,7 @@ describe("lending library web services", () => {
 		});
 	});
 
-	describe.skip("Find Books Web Service", async () => {
+	describe("Find Books Web Service", async () => {
 		beforeEach(async () => {
 			await loadAllBooks(ws);
 		});
@@ -252,7 +252,17 @@ describe("lending library web services", () => {
 		});
 
 		it("must error on a search field with bad index/count", async () => {
-			assert.fail("TODO");
+			for (const k of ["index", "count"]) {
+				for (const v of ["xx", -1]) {
+					const req: Record<string, any> = { search: "hello", [k]: v };
+					let count = -1;
+					const url = urlString(`${BASE}/books`, { count });
+					const res = await ws.get(url);
+					expect(res.status).to.equal(STATUS.BAD_REQUEST);
+					expect(res.body?.isOk).to.equal(false);
+					expect(res.body.errors.length).to.be.gt(0);
+				}
+			}
 		});
 
 		it("must find all results", async () => {
@@ -299,7 +309,24 @@ describe("lending library web services", () => {
 		});
 
 		it("must find a subsequence of JavaScript books", async () => {
-			assert.fail("TODO");
+			const search = "javascript";
+			const [index, count] = [2, 4];
+			const url = urlString(`${BASE}/books`, { search, count, index });
+			const res = await ws.get(url);
+			expect(res.status).to.equal(STATUS.OK);
+			expect(res.body?.isOk).to.equal(true);
+			const foundBooks = res.body.result;
+			const searchResult = [];
+			for (let result of foundBooks) {
+				searchResult.push(result.result);
+			}
+			const jsBooks = BOOKS.filter(
+				(b) => b.title.toLowerCase().indexOf(search) >= 0
+			)
+				.sort((b1, b2) => b1.title.localeCompare(b2.title))
+				.slice(index, index + count);
+			expect(searchResult.length).to.be.lte(count);
+			expect(searchResult).to.deep.equal(jsBooks);
 		});
 
 		it("must find no results", async () => {
@@ -385,7 +412,7 @@ describe("lending library web services", () => {
 		});
 	});
 
-	describe.skip("Checkout and Return Book Web Services", async () => {
+	describe.only("Checkout and Return Book Web Services", async () => {
 		beforeEach(async () => {
 			await loadAllBooks(ws);
 		});

@@ -61,18 +61,12 @@ function setupRoutes(app: Express.Application) {
 
 	//set up application routes
 	//TODO: set up application routes
-	// app.get(`${base}/`, (req: Express.Request, res: Express.Response) => {
-	// 	console.log("running");
-	// 	res.json({
-	// 		success: true,
-	// 	});
-	// });
 
-	app.put(`${base}/books`, doAddBook(app));
 	app.get(`${base}/books/:ISBN`, doGetBook(app));
-	// app.get(`${base}`, doFindBooks(app));
+	app.put(`${base}/books`, doAddBook(app));
+	app.get(`${base}/books`, doFindBooks(app));
 	app.put(`${base}/lendings`, doCheckoutBook(app));
-	// app.patch(`${base}/:userId`, doUpdateUser(app));
+	// app.delete(`${base}/lendings`, doReturnBook(app));
 	app.delete(`${base}`, doClear(app));
 
 	// Function to fetch the book using ISBN
@@ -91,8 +85,8 @@ function setupRoutes(app: Express.Application) {
 			}
 		};
 	}
-	// Function to add a book
 
+	// Function to add a book
 	function doAddBook(app: Express.Application) {
 		return async function (req: Express.Request, res: Express.Response) {
 			try {
@@ -110,12 +104,52 @@ function setupRoutes(app: Express.Application) {
 		};
 	}
 
+	// Function to find a book
+	function doFindBooks(app: Express.Application) {
+		return async function (req: Express.Request, res: Express.Response) {
+			try {
+				const q = { ...req.query };
+				const index = Number(q.index ?? DEFAULT_INDEX);
+				const count = Number(q.count ?? DEFAULT_COUNT);
+				const q1 = { ...q, count: count + 1, index };
+				const result = await app.locals.model.findBooks(q1);
+				if (!result.isOk) throw result;
+				const searchResult = result.val;
+				const response = pagedResult<RequestWithQuery>(
+					req,
+					"next",
+					searchResult
+				);
+				res.json(response);
+			} catch (err) {
+				const mapped = mapResultErrors(err);
+				res.status(mapped.status).json(mapped);
+			}
+		};
+	}
+
 	// Function to checkout a book
 
 	function doCheckoutBook(app: Express.Application) {
 		return async function (req: Express.Request, res: Express.Response) {
 			try {
 				const result = await app.locals.model.checkoutBook(req.body);
+				if (!result.isOk) throw result;
+				const response = selfResult<AddedBook>(req, result.val);
+				res.json(response);
+			} catch (err) {
+				const mapped = mapResultErrors(err);
+				res.status(mapped.status).json(mapped);
+			}
+		};
+	}
+
+	// Function to return a book
+
+	function doCheckoutAndReturn(app: Express.Application) {
+		return async function (req: Express.Request, res: Express.Response) {
+			try {
+				const result = await app.locals.model.returnBook(req.body);
 				if (!result.isOk) throw result;
 				const response = selfResult<AddedBook>(req, result.val);
 				res.json(response);
