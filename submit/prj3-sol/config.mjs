@@ -7,7 +7,7 @@ export default {
   },
 
   ws: {
-    port: 3000,
+    port: 2345,
     base: '/api',
   },
 
