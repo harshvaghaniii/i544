@@ -182,21 +182,43 @@ describe("lending library web services", () => {
 		});
 	}); //describe('Add Book ...')
 
-	describe.skip("Get Book Web Service", async () => {
+	describe("Get Book Web Service", async () => {
 		beforeEach(async () => {
 			await loadAllBooks(ws);
 		});
 
 		it("must get a book with specified isbn", async () => {
-			assert.fail("TODO");
+			const book = BOOKS[0];
+			const isbn = book.isbn;
+			const url = `${BASE}/books/${isbn}`;
+			const res = await ws.get(url);
+			expect(res.status).to.equal(STATUS.OK);
+			expect(res.body.isOk).to.equal(true);
 		});
 
 		it("must get a 404 for a book having a bad isbn", async () => {
-			assert.fail("TODO");
+			const book = BOOKS[0];
+			const isbn = book.isbn;
+			const url = `${BASE}/books/invalid-${isbn}`;
+			const res = await ws.get(url);
+			expect(res.status).to.equal(STATUS.NOT_FOUND);
+			expect(res.body.isOk).to.equal(false);
 		});
 
 		it("must retrieve an added book from its Location header", async () => {
-			assert.fail("TODO");
+			const url = `${BASE}/books`;
+			const book = BOOKS[0];
+			const res = await ws
+				.put(url)
+				.set("Content-Type", "application/json")
+				.send(book);
+			expect(res.status).to.equal(STATUS.CREATED);
+			expect(res.body?.isOk).to.equal(true);
+			expect(res.headers.location).to.equal(`${url}/${book.isbn}`);
+			const locationHeader = res.headers.location;
+			const response = await ws.get(locationHeader);
+			expect(response.status).to.equal(STATUS.OK);
+			expect(response.body.isOk).to.equal(true);
 		});
 	});
 
@@ -213,8 +235,8 @@ describe("lending library web services", () => {
 			expect(res1.status).to.equal(STATUS.OK);
 			expect(res1.body.isOk).to.equal(true);
 			const res2 = await ws.delete(BASE);
-			expect(res1.status).to.equal(STATUS.OK);
-			expect(res1.body.isOk).to.equal(true);
+			expect(res2.status).to.equal(STATUS.OK);
+			expect(res2.body.isOk).to.equal(true);
 			const res3 = await ws.get(url);
 			expect(res3.status).to.equal(STATUS.NOT_FOUND);
 			expect(res3.body.isOk).to.equal(false);
