@@ -339,7 +339,7 @@ describe("lending library web services", () => {
 		});
 	});
 
-	describe.only("Checkout Book Web Service with empty library", async () => {
+	describe("Checkout Book Web Service with empty library", async () => {
 		it("must error on missing field", async () => {
 			for (const f of ["isbn", "patronId"]) {
 				const v = f === "isnb" ? BOOKS[0].isbn : PATRONS[0];
@@ -366,7 +366,7 @@ describe("lending library web services", () => {
 		});
 	});
 
-	describe.only("Checkout Book Web Service with populated library", async () => {
+	describe("Checkout Book Web Service with populated library", async () => {
 		beforeEach(async () => {
 			await loadAllBooks(ws);
 		});
@@ -412,7 +412,7 @@ describe("lending library web services", () => {
 		});
 	});
 
-	describe.only("Checkout and Return Book Web Services", async () => {
+	describe("Checkout and Return Book Web Services", async () => {
 		beforeEach(async () => {
 			await loadAllBooks(ws);
 		});

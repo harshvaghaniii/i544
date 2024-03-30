@@ -66,7 +66,7 @@ function setupRoutes(app: Express.Application) {
 	app.put(`${base}/books`, doAddBook(app));
 	app.get(`${base}/books`, doFindBooks(app));
 	app.put(`${base}/lendings`, doCheckoutBook(app));
-	// app.delete(`${base}/lendings`, doReturnBook(app));
+	app.delete(`${base}/lendings`, doCheckoutAndReturn(app));
 	app.delete(`${base}`, doClear(app));
 
 	// Function to fetch the book using ISBN
