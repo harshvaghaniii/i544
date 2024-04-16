@@ -17,7 +17,7 @@ export function makeElement(tagName: string,
     element.setAttribute(k, v);
   }
   element.append(...appendees);
-  return element;
+  return element; 
 }
 
 

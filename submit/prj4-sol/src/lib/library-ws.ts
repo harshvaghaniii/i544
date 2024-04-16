@@ -30,7 +30,7 @@ export class LibraryWs {
 	async getBookByUrl(
 		bookUrl: URL | string
 	): Promise<Errors.Result<SuccessEnvelope<Lib.XBook>>> {
-		return Errors.errResult("TODO");
+		return getEnvelope<Lib.XBook, SuccessEnvelope<Lib.XBook>>(bookUrl);
 	}
 
 	/** given an absolute url findUrl ending with /books with query
@@ -46,20 +46,59 @@ export class LibraryWs {
 	/** check out book specified by lend */
 	//make a PUT request to /lendings
 	async checkoutBook(lend: Lib.Lend): Promise<Errors.Result<void>> {
-		return Errors.errResult("TODO");
+		const url: string = `${this.url}/api/lendings`;
+		const options = {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(lend),
+		};
+		try {
+			const result = await fetchJson<Lib.Lend | ErrorEnvelope>(
+				this.url + "/api/lendings",
+				options
+			);
+			if (result.isOk) return Errors.VOID_RESULT;
+		} catch (error) {
+			return Errors.errResult(`${options.method} ${url}: error ${error}`);
+		}
 	}
 
 	/** return book specified by lend */
 	//make a DELETE request to /lendings
 	async returnBook(lend: Lib.Lend): Promise<Errors.Result<void>> {
-		return Errors.errResult("TODO");
+		const url: string = `${this.url}/api/lendings`;
+		const options = {
+			method: "DELETE",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(lend),
+		};
+		try {
+			const result = await fetchJson<Lib.Lend | ErrorEnvelope>(url, options);
+			if (result.isOk) return Errors.VOID_RESULT;
+		} catch (error) {
+			return Errors.errResult(`${options.method} ${url}: error ${error}`);
+		}
 	}
 
 	/** return Lend[] of all lendings for isbn. */
 	//make a GET request to /lendings with query-params set
 	//to { findBy: 'isbn', isbn }.
 	async getLends(isbn: string): Promise<Errors.Result<Lib.Lend[]>> {
-		return Errors.errResult("TODO");
+		const lendUrl: URL = Utils.makeQueryUrl(`${this.url}/api/lendings`, {
+			findBy: isbn,
+		});
+		try {
+			const result = await fetchJson<Lib.Lend[] | ErrorEnvelope>(lendUrl);
+			if (result.isOk) {
+				return Errors.okResult<Lib.Lend[]>(result.val as Lib.Lend[]);
+			}
+		} catch (error) {
+			return Errors.errResult(`Failed to fetch lendings: ${error}`);
+		}
 	}
 }
 

@@ -30,11 +30,11 @@ class App {
 		this.ws = makeLibraryWs(wsUrl);
 		this.result = document.querySelector("#result");
 		this.errors = document.querySelector("#errors");
-		//TODO: add search handler
+		//TODO: add search handler - Done
 		this.searchHandler = this.searchHandler.bind(this);
-		const form = document.querySelector("form.grid-form");
-		if (form) {
-			form.addEventListener("submit", this.searchHandler);
+		const searchBar = document.querySelector("#search");
+		if (searchBar) {
+			searchBar.addEventListener("blur", this.searchHandler);
 		}
 	}
 	private async searchHandler(event: Event) {
@@ -47,7 +47,7 @@ class App {
 		const findUrl = makeQueryUrl(baseURL, {
 			search: userSearch,
 		});
-		const searchObj = new LibraryWs(baseURL);
+		const searchObj = new LibraryWs(this.wsUrl);
 		const res = await searchObj.findBooksByUrl(findUrl);
 		console.log(JSON.stringify(res));
 		// Further actions related to search handling can be added here
