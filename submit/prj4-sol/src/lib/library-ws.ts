@@ -40,7 +40,14 @@ export class LibraryWs {
 	async findBooksByUrl(
 		findUrl: URL | string
 	): Promise<Errors.Result<PagedEnvelope<Lib.XBook>>> {
-		return getEnvelope<Lib.XBook, PagedEnvelope<Lib.XBook>>(findUrl);
+		try {
+			const response = await getEnvelope<Lib.XBook, PagedEnvelope<Lib.XBook>>(findUrl);
+			if(response.isOk) {
+				return Errors.okResult(response.val);
+			}
+		} catch (error) {
+			
+		}
 	}
 
 	/** check out book specified by lend */

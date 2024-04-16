@@ -48,11 +48,65 @@ class App {
 			search: userSearch,
 		});
 		const searchObj = new LibraryWs(this.wsUrl);
-		const res = await searchObj.findBooksByUrl(findUrl);
-		console.log(JSON.stringify(res));
+		try {
+			const res = await searchObj.findBooksByUrl(findUrl);
+			if (res.isOk) {
+				console.log(JSON.stringify(res));
+				const bookElements: HTMLElement[] = res.val.result.map((book) =>
+					this.makeBook(book)
+				);
+				this.clearErrors();
+				this.clearResults();
+				const scrollElement: HTMLElement = makeElement("div", {
+					["class"]: "scroll",
+				});
+				const topLinks: HTMLElement[] = this.makeLinks(res.val.links);
+				if (topLinks.length > 0) scrollElement.append(...topLinks);
+
+				console.log(scrollElement);
+				const scrollElement2: HTMLElement = makeElement("div", {
+					["class"]: "scroll",
+				});
+				const bottomLinks: HTMLElement[] = this.makeLinks(res.val.links);
+				if (bottomLinks.length > 0) scrollElement2.append(...bottomLinks);
+				this.result.append(
+					scrollElement,
+					makeElement("ul", { id: "search-results" }, ...bookElements),
+					scrollElement2
+				);
+			}
+		} catch (error) {}
 		// Further actions related to search handling can be added here
 	}
 	//TODO: add private methods as needed
+
+	private makeLinks(links: NavLinks): HTMLElement[] {
+		let res: HTMLElement[] = [];
+		let ele1: HTMLElement = null;
+		if (links.prev !== undefined) {
+			ele1 = makeElement("a", { ["rel"]: "prev" }, "<<");
+		}
+		let ele2: HTMLElement = null;
+		if (links.next !== undefined) {
+			ele2 = makeElement("a", { ["rel"]: "next" }, ">>");
+		}
+		if (ele1 !== null) res.push(ele1);
+		if (ele2 !== null) res.push(ele2);
+		return res;
+	}
+
+	private makeBook(book: LinkedResult<Lib.XBook>): HTMLElement {
+		return makeElement(
+			"li",
+			{},
+			makeElement(
+				"span",
+				{ ["class"]: "content" },
+				book.result.title.toString()
+			),
+			makeElement("a", { ["class"]: "details" }, "Details...")
+		);
+	}
 
 	/** unwrap a result, displaying errors if !result.isOk,
 	 *  returning T otherwise.   Use as if (unwrap(result)) { ... }
@@ -70,6 +124,14 @@ class App {
 	private clearErrors() {
 		this.errors.innerHTML = "";
 		document.querySelectorAll(`.error`).forEach((el) => {
+			el.innerHTML = "";
+		});
+	}
+
+	/** clear out all errors */
+	private clearResults() {
+		this.result.innerHTML = "";
+		document.querySelectorAll(`#search-results`).forEach((el) => {
 			el.innerHTML = "";
 		});
 	}
