@@ -48,47 +48,117 @@ class App {
 			search: userSearch,
 		});
 		const searchObj = new LibraryWs(this.wsUrl);
-		try {
-			const res = await searchObj.findBooksByUrl(findUrl);
-			if (res.isOk) {
-				console.log(JSON.stringify(res));
-				const bookElements: HTMLElement[] = res.val.result.map((book) =>
-					this.makeBook(book)
-				);
-				this.clearErrors();
-				this.clearResults();
-				const scrollElement: HTMLElement = makeElement("div", {
-					["class"]: "scroll",
-				});
-				const topLinks: HTMLElement[] = this.makeLinks(res.val.links);
-				if (topLinks.length > 0) scrollElement.append(...topLinks);
+		const res = await searchObj.findBooksByUrl(findUrl);
+		if (res.isOk) {
+			console.log(JSON.stringify(res));
+			const bookElements: HTMLElement[] = res.val.result.map((book) =>
+				this.makeBook(book)
+			);
+			this.clearErrors();
+			this.clearResults();
+			const scrollElement: HTMLElement = makeElement("div", {
+				["class"]: "scroll",
+			});
+			const topLinks: HTMLElement[] = await this.makeLinks(res.val.links);
+			if (topLinks.length > 0) scrollElement.append(...topLinks);
 
-				console.log(scrollElement);
-				const scrollElement2: HTMLElement = makeElement("div", {
-					["class"]: "scroll",
-				});
-				const bottomLinks: HTMLElement[] = this.makeLinks(res.val.links);
-				if (bottomLinks.length > 0) scrollElement2.append(...bottomLinks);
-				this.result.append(
-					scrollElement,
-					makeElement("ul", { id: "search-results" }, ...bookElements),
-					scrollElement2
-				);
-			}
-		} catch (error) {}
+			console.log(scrollElement);
+			const scrollElement2: HTMLElement = makeElement("div", {
+				["class"]: "scroll",
+			});
+			const bottomLinks: HTMLElement[] = await this.makeLinks(res.val.links);
+			if (bottomLinks.length > 0) scrollElement2.append(...bottomLinks);
+			this.result.append(
+				scrollElement,
+				makeElement("ul", { id: "search-results" }, ...bookElements),
+				scrollElement2
+			);
+		} else if (res.isOk === false) {
+			console.log("here");
+			this.unwrap<PagedEnvelope<Lib.XBook>>(res);
+		}
+
 		// Further actions related to search handling can be added here
 	}
 	//TODO: add private methods as needed
 
-	private makeLinks(links: NavLinks): HTMLElement[] {
+	private async makeLinks(links: NavLinks): Promise<HTMLElement[]> {
 		let res: HTMLElement[] = [];
 		let ele1: HTMLElement = null;
 		if (links.prev !== undefined) {
 			ele1 = makeElement("a", { ["rel"]: "prev" }, "<<");
+			ele1.addEventListener("click", async (event) => {
+				event.preventDefault();
+				const searchObj: LibraryWs = new LibraryWs(this.wsUrl);
+				const res = await searchObj.findBooksByUrl(links.prev.href);
+				if (res.isOk) {
+					console.log(JSON.stringify(res));
+					const bookElements: HTMLElement[] = res.val.result.map((book) =>
+						this.makeBook(book)
+					);
+					this.clearErrors();
+					this.clearResults();
+					const scrollElement: HTMLElement = makeElement("div", {
+						["class"]: "scroll",
+					});
+					const topLinks: HTMLElement[] = await this.makeLinks(res.val.links);
+					if (topLinks.length > 0) scrollElement.append(...topLinks);
+
+					console.log(scrollElement);
+					const scrollElement2: HTMLElement = makeElement("div", {
+						["class"]: "scroll",
+					});
+					const bottomLinks: HTMLElement[] = await this.makeLinks(
+						res.val.links
+					);
+					if (bottomLinks.length > 0) scrollElement2.append(...bottomLinks);
+					this.result.append(
+						scrollElement,
+						makeElement("ul", { id: "search-results" }, ...bookElements),
+						scrollElement2
+					);
+				} else if (res.isOk === false) {
+					this.unwrap<PagedEnvelope<Lib.XBook>>(res);
+				}
+			});
 		}
 		let ele2: HTMLElement = null;
 		if (links.next !== undefined) {
 			ele2 = makeElement("a", { ["rel"]: "next" }, ">>");
+			ele2.addEventListener("click", async (event) => {
+				event.preventDefault();
+				const searchObj: LibraryWs = new LibraryWs(this.wsUrl);
+				const res = await searchObj.findBooksByUrl(links.next.href);
+				if (res.isOk) {
+					console.log(JSON.stringify(res));
+					const bookElements: HTMLElement[] = res.val.result.map((book) =>
+						this.makeBook(book)
+					);
+					this.clearErrors();
+					this.clearResults();
+					const scrollElement: HTMLElement = makeElement("div", {
+						["class"]: "scroll",
+					});
+					const topLinks: HTMLElement[] = await this.makeLinks(res.val.links);
+					if (topLinks.length > 0) scrollElement.append(...topLinks);
+
+					console.log(scrollElement);
+					const scrollElement2: HTMLElement = makeElement("div", {
+						["class"]: "scroll",
+					});
+					const bottomLinks: HTMLElement[] = await this.makeLinks(
+						res.val.links
+					);
+					if (bottomLinks.length > 0) scrollElement2.append(...bottomLinks);
+					this.result.append(
+						scrollElement,
+						makeElement("ul", { id: "search-results" }, ...bookElements),
+						scrollElement2
+					);
+				} else if (res.isOk === false) {
+					this.unwrap<PagedEnvelope<Lib.XBook>>(res);
+				}
+			});
 		}
 		if (ele1 !== null) res.push(ele1);
 		if (ele2 !== null) res.push(ele2);
@@ -96,6 +166,21 @@ class App {
 	}
 
 	private makeBook(book: LinkedResult<Lib.XBook>): HTMLElement {
+		const anchorElement: HTMLElement = makeElement(
+			"a",
+			{ ["class"]: "details" },
+			"Details..."
+		);
+		anchorElement.addEventListener("click", async (event) => {
+			event.preventDefault();
+			this.clearErrors();
+			this.clearResults();
+			this.result.append(
+				await this.makeBookDetails(book),
+				this.makeForm(book.result)
+			);
+			this.result.append(await this.makeBorrowers(book.result.isbn));
+		});
 		return makeElement(
 			"li",
 			{},
@@ -104,8 +189,110 @@ class App {
 				{ ["class"]: "content" },
 				book.result.title.toString()
 			),
-			makeElement("a", { ["class"]: "details" }, "Details...")
+			anchorElement
 		);
+	}
+
+	private async makeBookDetails(
+		book: LinkedResult<Lib.XBook>
+	): Promise<HTMLElement> {
+		const appendeesArr: HTMLElement[] = [
+			makeElement("dt", {}, "ISBN"),
+			makeElement("dd", {}, book.result.isbn),
+			makeElement("dt", {}, "Title"),
+			makeElement("dd", {}, book.result.title),
+			makeElement("dt", {}, "Autors"),
+			makeElement("dd", {}, book.result.authors.toString()),
+			makeElement("dt", {}, "Number of Pages"),
+			makeElement("dd", {}, book.result.pages.toString()),
+			makeElement("dt", {}, "Publisher"),
+			makeElement("dd", {}, book.result.publisher),
+			makeElement("dt", {}, "Number of Copies"),
+			makeElement("dd", {}, book.result.nCopies.toString()),
+			makeElement("dt", {}, "Borrowers"),
+			makeElement(
+				"dd",
+				{ ["id"]: "borrowers" },
+				await this.makeBorrowers(book.result.isbn)
+			),
+		];
+		return makeElement("dl", { ["class"]: "book-details" }, ...appendeesArr);
+	}
+
+	private async makeBorrowers(isbn: string): Promise<HTMLElement> {
+		const appendeesArr: HTMLElement[] = [];
+
+		const baseURL: URL = makeQueryUrl(this.wsUrl + "/api/lendings", {
+			findBy: "isbn",
+			isbn,
+		});
+		const lendObj = new LibraryWs(baseURL.toString());
+		const res = await lendObj.getLends(isbn);
+		console.log(`printing res: ${JSON.stringify(res)}`);
+		if (res.isOk) {
+			console.log(`this is res: ${JSON.stringify(res)}`);
+			console.log(`Printing val... ${JSON.stringify(res.val)}`);
+			const borrowerDetails: HTMLElement[] = res.val.map((element) =>
+				this.makeBorrowersDetails(element)
+			);
+			return makeElement("ul", {}, ...borrowerDetails);
+		}
+	}
+
+	private makeBorrowersDetails(lend: Lib.Lend): HTMLElement {
+		const { isbn, patronId } = lend;
+		const returnButton: HTMLElement = makeElement(
+			"button",
+			{ ["class"]: "return-book" },
+			"Return Book"
+		);
+		returnButton.addEventListener("click", (event) => {
+			event.preventDefault();
+			console.log("clicked return book");
+		});
+		return makeElement(
+			"li",
+			{},
+			makeElement("span", { ["class"]: "content", patronId }),
+			returnButton
+		);
+	}
+
+	private makeForm(book: Lib.XBook): HTMLElement {
+		const formSubmitButton: HTMLElement = makeElement(
+			"button",
+			{ ["type"]: "submit" },
+			"Checkout Book"
+		);
+		formSubmitButton.addEventListener("click", async (event) => {
+			event.preventDefault();
+			const patronId: string = document.getElementById("patronId").innerHTML;
+			const isbn: string = book.isbn;
+			const lendObj: Lib.Lend = {
+				isbn,
+				patronId,
+			};
+			const url: string = this.wsUrl + "/api/lendings";
+			const checkoutObj = new LibraryWs(url);
+			const result = await checkoutObj.checkoutBook(lendObj);
+			if (result.isOk) {
+				console.log(result);
+			} else if (result.isOk === false) {
+				displayErrors(result.errors);
+			}
+		});
+		const formArr: HTMLElement[] = [
+			makeElement("label", { ["for"]: "patronID" }, "Patron ID"),
+			makeElement(
+				"span",
+				{},
+				makeElement("input", { ["id"]: "patronId" }),
+				makeElement("br", {}),
+				makeElement("span", { ["class"]: "error", ["id"]: "patronId-error" })
+			),
+			formSubmitButton,
+		];
+		return makeElement("form", { ["class"]: "grid-form" }, ...formArr);
 	}
 
 	/** unwrap a result, displaying errors if !result.isOk,
@@ -145,6 +332,7 @@ class App {
  */
 function displayErrors(errors: Errors.Err[]) {
 	for (const err of errors) {
+		console.log(err);
 		const id = err.options.widget ?? err.options.path;
 		const widget = id && document.querySelector(`#${id}-error`);
 		if (widget) {
