@@ -179,7 +179,6 @@ class App {
 				await this.makeBookDetails(book),
 				this.makeForm(book.result)
 			);
-			this.result.append(await this.makeBorrowers(book.result.isbn));
 		});
 		return makeElement(
 			"li",
@@ -210,11 +209,7 @@ class App {
 			makeElement("dt", {}, "Number of Copies"),
 			makeElement("dd", {}, book.result.nCopies.toString()),
 			makeElement("dt", {}, "Borrowers"),
-			makeElement(
-				"dd",
-				{ ["id"]: "borrowers" },
-				await this.makeBorrowers(book.result.isbn)
-			),
+			await this.makeBorrowers(book.result.isbn),
 		];
 		return makeElement("dl", { ["class"]: "book-details" }, ...appendeesArr);
 	}
@@ -232,15 +227,23 @@ class App {
 		if (res.isOk) {
 			console.log(`this is res: ${JSON.stringify(res)}`);
 			console.log(`Printing val... ${JSON.stringify(res.val)}`);
+			if (res.val.length === 0)
+				return makeElement("dd", { ["id"]: "borrowers" }, "None");
 			const borrowerDetails: HTMLElement[] = res.val.map((element) =>
 				this.makeBorrowersDetails(element)
 			);
-			return makeElement("ul", {}, ...borrowerDetails);
+			return makeElement(
+				"dd",
+				{ ["id"]: "borrowers" },
+				makeElement("ul", {}, ...borrowerDetails)
+			);
+			// return makeElement("ul", {}, ...borrowerDetails)
 		}
 	}
 
 	private makeBorrowersDetails(lend: Lib.Lend): HTMLElement {
 		const { isbn, patronId } = lend;
+		console.log(`Printing herer: ${patronId}`);
 		const returnButton: HTMLElement = makeElement(
 			"button",
 			{ ["class"]: "return-book" },
@@ -253,7 +256,7 @@ class App {
 		return makeElement(
 			"li",
 			{},
-			makeElement("span", { ["class"]: "content", patronId }),
+			makeElement("span", { ["class"]: "content" }, patronId),
 			returnButton
 		);
 	}
@@ -266,17 +269,21 @@ class App {
 		);
 		formSubmitButton.addEventListener("click", async (event) => {
 			event.preventDefault();
-			const patronId: string = document.getElementById("patronId").innerHTML;
+			this.clearErrors();
+			const patronId: HTMLInputElement = document.getElementById(
+				"patronId"
+			) as HTMLInputElement;
 			const isbn: string = book.isbn;
+			const patronID: string = patronId.value;
 			const lendObj: Lib.Lend = {
 				isbn,
-				patronId,
+				patronId: patronID,
 			};
 			const url: string = this.wsUrl + "/api/lendings";
 			const checkoutObj = new LibraryWs(url);
 			const result = await checkoutObj.checkoutBook(lendObj);
 			if (result.isOk) {
-				console.log(result);
+				console.log();
 			} else if (result.isOk === false) {
 				displayErrors(result.errors);
 			}

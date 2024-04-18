@@ -67,20 +67,31 @@ export class LibraryWs {
 			},
 			body: JSON.stringify(lend),
 		};
+		// try {
+		// 	const result = await fetchJson<PagedEnvelope<Lib.XBook> | ErrorEnvelope>(
+		// 		this.url,
+		// 		options
+		// 	);
+		// 	if (result.isOk) {
+		// 		if (result.val.isOk) {
+		// 			return Errors.VOID_RESULT;
+		// 		} else if (result.val.isOk === false) {
+		// 			return Errors.errResult(result.val.errors);
+		// 		}
+		// 	}
+		// } catch (error) {
+		// 	return Errors.errResult(`${options.method} ${this.url}: error ${error}`);
+		// }
 		try {
-			const result = await fetchJson<PagedEnvelope<Lib.XBook> | ErrorEnvelope>(
-				this.url,
-				options
-			);
-			if (result.isOk) {
-				if (result.val.isOk) {
-					return Errors.VOID_RESULT;
-				} else if (result.val.isOk === false) {
-					return Errors.errResult(result.val.errors);
-				}
+			const response = await fetch(this.url, options);
+			if (response.ok) {
+				return Errors.VOID_RESULT;
+			} else {
+				const errEnv: ErrorEnvelope = await response.json();
+				return new Errors.ErrResult(errEnv.errors as Errors.Err[]);
 			}
 		} catch (error) {
-			return Errors.errResult(`${options.method} ${this.url}: error ${error}`);
+			return Errors.errResult(`Some error occurred!! ${error}`);
 		}
 	}
 
