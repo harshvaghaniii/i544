@@ -53,21 +53,6 @@ export class LibraryWs {
 			},
 			body: JSON.stringify(lend),
 		};
-		// try {
-		// 	const result = await fetchJson<PagedEnvelope<Lib.XBook> | ErrorEnvelope>(
-		// 		this.url,
-		// 		options
-		// 	);
-		// 	if (result.isOk) {
-		// 		if (result.val.isOk) {
-		// 			return Errors.VOID_RESULT;
-		// 		} else if (result.val.isOk === false) {
-		// 			return Errors.errResult(result.val.errors);
-		// 		}
-		// 	}
-		// } catch (error) {
-		// 	return Errors.errResult(`${options.method} ${this.url}: error ${error}`);
-		// }
 		try {
 			const response = await fetch(this.url, options);
 			if (response.ok) {
@@ -103,12 +88,6 @@ export class LibraryWs {
 		} catch (error) {
 			return Errors.errResult(`Some error occurred!! ${error}`);
 		}
-		// try {
-		// 	const result = await fetchJson<Lib.Lend | ErrorEnvelope>(url, options);
-		// 	if (result.isOk) return Errors.VOID_RESULT;
-		// } catch (error) {
-		// 	return Errors.errResult(`${options.method} ${url}: error ${error}`);
-		// }
 	}
 
 	/** return Lend[] of all lendings for isbn. */
