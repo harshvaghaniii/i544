@@ -115,14 +115,11 @@ export class LibraryWs {
 	//make a GET request to /lendings with query-params set
 	//to { findBy: 'isbn', isbn }.
 	async getLends(isbn: string): Promise<Errors.Result<Lib.Lend[]>> {
-		console.log(`i'm here: ${this.url}`);
 		try {
 			const result = await fetchJson<PagedEnvelope<Lib.Lend[]> | ErrorEnvelope>(
 				new URL(this.url)
 			);
-			console.log("I'm printing results in wsts: ", JSON.stringify(result));
 			if (result.isOk) {
-				console.log(`printing val: ${JSON.stringify(result.val)}`);
 				if (result.val.isOk) {
 					const lendArr = result.val.result as Lib.Lend[];
 					return Errors.okResult(lendArr);
