@@ -39,6 +39,8 @@ class App {
 	}
 	private async searchHandler(event: Event) {
 		event.preventDefault();
+		this.clearErrors();
+		this.clearResults();
 		const searchField: HTMLInputElement | null = document.getElementById(
 			"search"
 		) as HTMLInputElement;
@@ -175,10 +177,7 @@ class App {
 			event.preventDefault();
 			this.clearErrors();
 			this.clearResults();
-			this.result.append(
-				await this.makeBookDetails(book),
-				this.makeForm(book.result)
-			);
+			this.result.append(await this.makeBookDetails(book), this.makeForm(book));
 		});
 		return makeElement(
 			"li",
@@ -195,6 +194,7 @@ class App {
 	private async makeBookDetails(
 		book: LinkedResult<Lib.XBook>
 	): Promise<HTMLElement> {
+		this.clearErrors();
 		const appendeesArr: HTMLElement[] = [
 			makeElement("dt", {}, "ISBN"),
 			makeElement("dd", {}, book.result.isbn),
@@ -216,7 +216,10 @@ class App {
 
 	private async makeBorrowers(isbn: string): Promise<HTMLElement> {
 		const appendeesArr: HTMLElement[] = [];
-
+		// const borrowersElement: HTMLElement = document.querySelector("#borrowers");
+		// if (borrowersElement !== null) borrowersElement.innerHTML = "";
+		this.clearResults();
+		this.clearErrors();
 		const baseURL: URL = makeQueryUrl(this.wsUrl + "/api/lendings", {
 			findBy: "isbn",
 			isbn,
@@ -225,8 +228,6 @@ class App {
 		const res = await lendObj.getLends(isbn);
 		console.log(`printing res: ${JSON.stringify(res)}`);
 		if (res.isOk) {
-			console.log(`this is res: ${JSON.stringify(res)}`);
-			console.log(`Printing val... ${JSON.stringify(res.val)}`);
 			if (res.val.length === 0)
 				return makeElement("dd", { ["id"]: "borrowers" }, "None");
 			const borrowerDetails: HTMLElement[] = res.val.map((element) =>
@@ -249,9 +250,12 @@ class App {
 			{ ["class"]: "return-book" },
 			"Return Book"
 		);
-		returnButton.addEventListener("click", (event) => {
+		returnButton.addEventListener("click", async (event) => {
 			event.preventDefault();
-			console.log("clicked return book");
+			this.clearErrors();
+			console.log(`in the return handler!!`);
+			const res = await this.ws.returnBook(lend);
+			await this.makeBorrowers(lend.isbn);
 		});
 		return makeElement(
 			"li",
@@ -261,7 +265,7 @@ class App {
 		);
 	}
 
-	private makeForm(book: Lib.XBook): HTMLElement {
+	private makeForm(book: LinkedResult<Lib.XBook>): HTMLElement {
 		const formSubmitButton: HTMLElement = makeElement(
 			"button",
 			{ ["type"]: "submit" },
@@ -273,7 +277,7 @@ class App {
 			const patronId: HTMLInputElement = document.getElementById(
 				"patronId"
 			) as HTMLInputElement;
-			const isbn: string = book.isbn;
+			const isbn: string = book.result.isbn;
 			const patronID: string = patronId.value;
 			const lendObj: Lib.Lend = {
 				isbn,
@@ -283,7 +287,7 @@ class App {
 			const checkoutObj = new LibraryWs(url);
 			const result = await checkoutObj.checkoutBook(lendObj);
 			if (result.isOk) {
-				console.log();
+				await this.makeBorrowers(book.result.isbn);
 			} else if (result.isOk === false) {
 				displayErrors(result.errors);
 			}

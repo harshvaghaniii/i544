@@ -30,14 +30,7 @@ export class LibraryWs {
 	async getBookByUrl(
 		bookUrl: URL | string
 	): Promise<Errors.Result<SuccessEnvelope<Lib.XBook>>> {
-		const response = await getEnvelope<Lib.XBook, SuccessEnvelope<Lib.XBook>>(
-			bookUrl
-		);
-		if (response.isOk) {
-			return Errors.okResult(response.val);
-		} else if (response.isOk === false) {
-			return Errors.errResult(response.errors);
-		}
+		return await getEnvelope<Lib.XBook, SuccessEnvelope<Lib.XBook>>(bookUrl);
 	}
 
 	/** given an absolute url findUrl ending with /books with query
@@ -47,14 +40,7 @@ export class LibraryWs {
 	async findBooksByUrl(
 		findUrl: URL | string
 	): Promise<Errors.Result<PagedEnvelope<Lib.XBook>>> {
-		const response = await getEnvelope<Lib.XBook, PagedEnvelope<Lib.XBook>>(
-			findUrl
-		);
-		if (response.isOk) {
-			return Errors.okResult(response.val);
-		} else if (response.isOk === false) {
-			return Errors.errResult(response.errors);
-		}
+		return await getEnvelope<Lib.XBook, PagedEnvelope<Lib.XBook>>(findUrl);
 	}
 
 	/** check out book specified by lend */
@@ -107,11 +93,22 @@ export class LibraryWs {
 			body: JSON.stringify(lend),
 		};
 		try {
-			const result = await fetchJson<Lib.Lend | ErrorEnvelope>(url, options);
-			if (result.isOk) return Errors.VOID_RESULT;
+			const response = await fetch(url, options);
+			if (response.ok) {
+				return Errors.VOID_RESULT;
+			} else {
+				const errEnv: ErrorEnvelope = await response.json();
+				return new Errors.ErrResult(errEnv.errors as Errors.Err[]);
+			}
 		} catch (error) {
-			return Errors.errResult(`${options.method} ${url}: error ${error}`);
+			return Errors.errResult(`Some error occurred!! ${error}`);
 		}
+		// try {
+		// 	const result = await fetchJson<Lib.Lend | ErrorEnvelope>(url, options);
+		// 	if (result.isOk) return Errors.VOID_RESULT;
+		// } catch (error) {
+		// 	return Errors.errResult(`${options.method} ${url}: error ${error}`);
+		// }
 	}
 
 	/** return Lend[] of all lendings for isbn. */
