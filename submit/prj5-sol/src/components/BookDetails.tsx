@@ -25,6 +25,10 @@ const BookDetails = ({
 }) => {
 	const [patronID, setPatronID] = useState<string>("");
 
+	/**
+	 * Handler to checkout the book
+	 */
+
 	const checkoutHandler = async (
 		e: React.MouseEvent<HTMLButtonElement, MouseEvent>
 	) => {
@@ -35,7 +39,30 @@ const BookDetails = ({
 		});
 		if (response.isOk) {
 			updateList(e, book);
+			updateErrors([]);
 		} else if (response.isOk === false) {
+			updateErrors(response.errors);
+		}
+	};
+
+	/**
+	 * Handler to return the book
+	 */
+
+	const returnHandler = async (
+		e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+		patronId: string
+	) => {
+		e.preventDefault();
+		const response = await object.returnBook({
+			isbn: book.result.isbn,
+			patronId,
+		});
+		if (response.isOk) {
+			updateList(e, book);
+			updateErrors([]);
+		} else if (response.isOk === false) {
+			console.log("reached here");
 			updateErrors(response.errors);
 		}
 	};
@@ -56,15 +83,21 @@ const BookDetails = ({
 				<dt>Number of Copies</dt>
 				<dd>{book.result.nCopies}</dd>
 				<dt>Borrowers</dt>
-				<dd id="borrowers">{borrowers.length === 0 && "None"}</dd>
 				<dd id="borrowers">
-					{borrowers.length > 0 && (
+					{borrowers.length === 0 ? (
+						"None"
+					) : (
 						<ul>
 							{borrowers.map((borrower) => {
 								return (
 									<li key={borrower.patronId}>
 										<span className="content">{borrower.patronId}</span>
-										<button className="return-book">Return Book</button>
+										<button
+											className="return-book"
+											onClick={(e) => returnHandler(e, borrower.patronId)}
+										>
+											Return Book
+										</button>
 									</li>
 								);
 							})}
