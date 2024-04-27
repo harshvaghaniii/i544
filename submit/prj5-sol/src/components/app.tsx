@@ -38,11 +38,20 @@ export function App(props: AppProps) {
 		const response = await libraryWS.findBooksByUrl(searchURL);
 		if (response.isOk) {
 			setErrors([]);
+			console.log(response.val);
 			setBookResults((prevState) => response.val);
 		} else if (response.isOk === false) {
 			setErrors(response.errors);
 			setBookResults(null);
 		}
+	};
+
+	const handleLinks = async (
+		e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+		result: PagedEnvelope<Lib.XBook>
+	) => {
+		e.preventDefault();
+		setBookResults(result);
 	};
 
 	//TODO
@@ -64,7 +73,11 @@ export function App(props: AppProps) {
 
 			<div id="result">
 				{bookResult?.isOk && bookResult.result.length > 0 && (
-					<BookResults bookResult={bookResult} />
+					<BookResults
+						bookResult={bookResult}
+						onChangeResults={handleLinks}
+						object={libraryWS}
+					/>
 				)}
 				{/*TODO*/}
 			</div>
