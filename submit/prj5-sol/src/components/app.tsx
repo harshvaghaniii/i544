@@ -31,6 +31,10 @@ export function App(props: AppProps) {
 	const [errors, setErrors] = useState<Errors.Err[]>([]);
 	const [currentBook, setCurrentBook] = useState<LinkedResult<Lib.XBook>>(null);
 
+	const updateErrors = (errorArr: Errors.Err[]) => {
+		setErrors(errorArr);
+	};
+
 	const blurHandler = async (
 		e: React.FocusEvent<HTMLInputElement, Element>
 	) => {
@@ -44,7 +48,7 @@ export function App(props: AppProps) {
 			console.log(response.val);
 			setBookResults((prevState) => response.val);
 		} else if (response.isOk === false) {
-			setErrors(response.errors);
+			updateErrors(response.errors);
 			setBookResults(null);
 		}
 		setCurrentBook(null);
@@ -60,7 +64,9 @@ export function App(props: AppProps) {
 	};
 
 	const getDetails = async (
-		e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+		e:
+			| React.MouseEvent<HTMLAnchorElement, MouseEvent>
+			| React.MouseEvent<HTMLButtonElement, MouseEvent>,
 		book: LinkedResult<Lib.XBook>
 	) => {
 		e.preventDefault();
@@ -98,7 +104,13 @@ export function App(props: AppProps) {
 					/>
 				)}
 				{borrowers?.isOk && (
-					<BookDetails book={currentBook} borrowers={borrowers.val} />
+					<BookDetails
+						book={currentBook}
+						borrowers={borrowers.val}
+						object={libraryWS}
+						updateList={getDetails}
+						updateErrors={updateErrors}
+					/>
 				)}
 				{/*TODO*/}
 			</div>

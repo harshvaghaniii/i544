@@ -5,7 +5,11 @@ const ErrorComponent = ({ errors }: { errors: Errors.Err[] }) => {
 	return (
 		<>
 			{errors.map((error) => {
-				return <li className="error">{error.message}</li>;
+				return (
+					<li key={error.message} className="error">
+						{error.message}
+					</li>
+				);
 			})}
 		</>
 	);

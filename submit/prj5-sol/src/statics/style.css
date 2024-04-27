@@ -158,6 +158,10 @@ footer li + li::before {
   font-style: oblique;
   float: right;
 }
+.return-book {
+  font-style: oblique;
+  float: right;
+}
 
 .show {
   visibility: visible;
