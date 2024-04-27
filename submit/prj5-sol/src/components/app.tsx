@@ -16,6 +16,7 @@ import { makeLibraryWs, LibraryWs } from "../lib/library-ws.js";
 import BookResults from "./BookResults.js";
 import { makeQueryUrl } from "../lib/utils.js";
 import ErrorComponent from "./ErrorComponents.js";
+import BookDetails from "./BookDetails.js";
 
 type AppProps = {
 	wsUrl: string;
@@ -26,7 +27,9 @@ export function App(props: AppProps) {
 	let libraryWS: LibraryWs = new LibraryWs(wsUrl);
 
 	const [bookResult, setBookResults] = useState<PagedEnvelope<Lib.XBook>>(null);
+	const [borrowers, setBorrowers] = useState<Errors.Result<Lib.Lend[]>>(null);
 	const [errors, setErrors] = useState<Errors.Err[]>([]);
+	const [currentBook, setCurrentBook] = useState<LinkedResult<Lib.XBook>>(null);
 
 	const blurHandler = async (
 		e: React.FocusEvent<HTMLInputElement, Element>
@@ -44,6 +47,8 @@ export function App(props: AppProps) {
 			setErrors(response.errors);
 			setBookResults(null);
 		}
+		setCurrentBook(null);
+		setBorrowers(null);
 	};
 
 	const handleLinks = async (
@@ -54,7 +59,19 @@ export function App(props: AppProps) {
 		setBookResults(result);
 	};
 
-	//TODO
+	const getDetails = async (
+		e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+		book: LinkedResult<Lib.XBook>
+	) => {
+		e.preventDefault();
+		setBookResults(null);
+		setErrors([]);
+		const lends: Errors.Result<Lib.Lend[]> = await libraryWS.getLends(
+			book.result.isbn
+		);
+		setCurrentBook(book);
+		setBorrowers(lends);
+	};
 
 	return (
 		<>
@@ -77,7 +94,11 @@ export function App(props: AppProps) {
 						bookResult={bookResult}
 						onChangeResults={handleLinks}
 						object={libraryWS}
+						detailsHandler={getDetails}
 					/>
+				)}
+				{borrowers?.isOk && (
+					<BookDetails book={currentBook} borrowers={borrowers.val} />
 				)}
 				{/*TODO*/}
 			</div>

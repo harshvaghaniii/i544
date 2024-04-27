@@ -1,6 +1,6 @@
 import React from "react";
 import { LibraryWs } from "src/lib/library-ws";
-import { Link, PagedEnvelope } from "src/lib/response-envelopes";
+import { Link, LinkedResult, PagedEnvelope } from "src/lib/response-envelopes";
 //types defined in library.ts in earlier projects
 import * as Lib from "library-types";
 
@@ -12,6 +12,7 @@ const BookResults = ({
 	bookResult,
 	onChangeResults,
 	object,
+	detailsHandler,
 }: {
 	bookResult: PagedEnvelope<Lib.XBook>;
 	onChangeResults: (
@@ -19,6 +20,10 @@ const BookResults = ({
 		result: PagedEnvelope<Lib.XBook>
 	) => Promise<void>;
 	object: LibraryWs;
+	detailsHandler: (
+		e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+		book: LinkedResult<Lib.XBook>
+	) => Promise<void>;
 }) => {
 	const linkHandler = async (
 		e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -56,7 +61,9 @@ const BookResults = ({
 						return (
 							<li key={book.result.isbn}>
 								<span className="content">{book.result.title}</span>
-								<a className="details">details...</a>
+								<a className="details" onClick={(e) => detailsHandler(e, book)}>
+									details...
+								</a>
 							</li>
 						);
 					})}
