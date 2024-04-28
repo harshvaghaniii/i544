@@ -12,6 +12,8 @@ const BookDetails = ({
 	updateList,
 	updateErrors,
 	errors,
+	dbErrors,
+	updateDbErrors,
 }: {
 	book: LinkedResult<Lib.XBook>;
 	borrowers: Lib.Lend[];
@@ -24,6 +26,8 @@ const BookDetails = ({
 	) => Promise<void>;
 	updateErrors: (errorArr: Errors.Err[]) => void;
 	errors: Errors.Err[];
+	dbErrors: Errors.Err[];
+	updateDbErrors: (errorArr: Errors.Err[]) => void;
 }) => {
 	const [patronID, setPatronID] = useState<string>("");
 
@@ -42,8 +46,19 @@ const BookDetails = ({
 		if (response.isOk) {
 			updateList(e, book);
 			updateErrors([]);
+			updateDbErrors([]);
 		} else if (response.isOk === false) {
-			updateErrors(response.errors);
+			const tempErrors: Errors.Err[] = [];
+			const tempDbErrors: Errors.Err[] = [];
+			for (let error of response.errors) {
+				if (error.options.path === "patronId") {
+					tempErrors.push(error);
+				} else {
+					tempDbErrors.push(error);
+				}
+			}
+			updateErrors(tempErrors);
+			updateDbErrors(tempDbErrors);
 		}
 	};
 
@@ -64,7 +79,6 @@ const BookDetails = ({
 			updateList(e, book);
 			updateErrors([]);
 		} else if (response.isOk === false) {
-			console.log("reached here");
 			updateErrors(response.errors);
 		}
 	};
@@ -118,7 +132,7 @@ const BookDetails = ({
 					/>{" "}
 					<br />
 					<span className="error" id="patronId-error">
-						{errors?.map((error) => {
+						{errors.map((error) => {
 							return (
 								<span key={error.message} className="error" id="patronId-error">
 									{error.message}

@@ -30,12 +30,17 @@ export function App(props: AppProps) {
 	const [borrowers, setBorrowers] = useState<Errors.Result<Lib.Lend[]>>(null);
 	const [errors, setErrors] = useState<Errors.Err[]>([]);
 	const [widgetErrors, setWidgetErrors] = useState<Errors.Err[]>([]);
+	const [dbErrors, setDbErrors] = useState<Errors.Err[]>([]);
 	const [currentBook, setCurrentBook] = useState<LinkedResult<Lib.XBook>>(null);
 
 	/**
 	 * Updating database errors
 	 * @param errorArr
 	 */
+
+	const updateDbErrors = (errorArr: Errors.Err[]) => {
+		setDbErrors(errorArr);
+	};
 
 	const updateErrors = (errorArr: Errors.Err[]) => {
 		setErrors(errorArr);
@@ -59,12 +64,14 @@ export function App(props: AppProps) {
 		}).href;
 		const response = await libraryWS.findBooksByUrl(searchURL);
 		if (response.isOk) {
-			setErrors([]);
-			setWidgetErrors([]);
+			updateErrors([]);
+			updateDbErrors([]);
+			updateWidgetErrors([]);
 			setBookResults((prevState) => response.val);
 		} else if (response.isOk === false) {
 			updateWidgetErrors(response.errors);
 			updateErrors([]);
+			updateDbErrors([]);
 			setBookResults(null);
 		}
 		setCurrentBook(null);
@@ -97,6 +104,17 @@ export function App(props: AppProps) {
 
 	return (
 		<>
+			{dbErrors.length > 0 && (
+				<ul id="errors">
+					{dbErrors.map((error) => {
+						return (
+							<li key={error.message} className="error">
+								{error.message}
+							</li>
+						);
+					})}
+				</ul>
+			)}
 			<form className="grid-form">
 				<label htmlFor="search">Search</label>
 				<span>
@@ -127,6 +145,8 @@ export function App(props: AppProps) {
 						updateList={getDetails}
 						updateErrors={updateErrors}
 						errors={errors}
+						dbErrors={dbErrors}
+						updateDbErrors={updateDbErrors}
 					/>
 				)}
 				{/*TODO*/}
