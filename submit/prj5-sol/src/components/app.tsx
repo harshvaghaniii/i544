@@ -29,10 +29,25 @@ export function App(props: AppProps) {
 	const [bookResult, setBookResults] = useState<PagedEnvelope<Lib.XBook>>(null);
 	const [borrowers, setBorrowers] = useState<Errors.Result<Lib.Lend[]>>(null);
 	const [errors, setErrors] = useState<Errors.Err[]>([]);
+	const [widgetErrors, setWidgetErrors] = useState<Errors.Err[]>([]);
 	const [currentBook, setCurrentBook] = useState<LinkedResult<Lib.XBook>>(null);
+
+	/**
+	 * Updating database errors
+	 * @param errorArr
+	 */
 
 	const updateErrors = (errorArr: Errors.Err[]) => {
 		setErrors(errorArr);
+	};
+
+	/**
+	 * Updating widget errors
+	 * @param errorArr
+	 */
+
+	const updateWidgetErrors = (errorArr: Errors.Err[]) => {
+		setWidgetErrors(errorArr);
 	};
 
 	const blurHandler = async (
@@ -45,10 +60,11 @@ export function App(props: AppProps) {
 		const response = await libraryWS.findBooksByUrl(searchURL);
 		if (response.isOk) {
 			setErrors([]);
-			console.log(response.val);
+			setWidgetErrors([]);
 			setBookResults((prevState) => response.val);
 		} else if (response.isOk === false) {
-			updateErrors(response.errors);
+			updateWidgetErrors(response.errors);
+			updateErrors([]);
 			setBookResults(null);
 		}
 		setCurrentBook(null);
@@ -81,16 +97,16 @@ export function App(props: AppProps) {
 
 	return (
 		<>
-			<ul id="errors">
-				{errors.length > 0 && <ErrorComponent errors={errors} />}
-			</ul>
-
 			<form className="grid-form">
 				<label htmlFor="search">Search</label>
 				<span>
 					<input id="search" onBlur={(e) => blurHandler(e)} />
 					<br />
-					<span className="error" id="search-error"></span>
+					<span className="error" id="search-error">
+						{widgetErrors.map((error) => {
+							return error.message;
+						})}
+					</span>
 				</span>
 			</form>
 
@@ -110,6 +126,7 @@ export function App(props: AppProps) {
 						object={libraryWS}
 						updateList={getDetails}
 						updateErrors={updateErrors}
+						errors={errors}
 					/>
 				)}
 				{/*TODO*/}

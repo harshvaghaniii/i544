@@ -11,6 +11,7 @@ const BookDetails = ({
 	object,
 	updateList,
 	updateErrors,
+	errors,
 }: {
 	book: LinkedResult<Lib.XBook>;
 	borrowers: Lib.Lend[];
@@ -22,6 +23,7 @@ const BookDetails = ({
 		book: LinkedResult<Lib.XBook>
 	) => Promise<void>;
 	updateErrors: (errorArr: Errors.Err[]) => void;
+	errors: Errors.Err[];
 }) => {
 	const [patronID, setPatronID] = useState<string>("");
 
@@ -115,7 +117,15 @@ const BookDetails = ({
 						onChange={(e) => setPatronID(e.target.value)}
 					/>{" "}
 					<br />
-					<span className="error" id="patronId-error"></span>
+					<span className="error" id="patronId-error">
+						{errors?.map((error) => {
+							return (
+								<span key={error.message} className="error" id="patronId-error">
+									{error.message}
+								</span>
+							);
+						})}
+					</span>
 				</span>
 				<button type="submit" onClick={(e) => checkoutHandler(e)}>
 					Checkout Book
