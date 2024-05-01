@@ -69,6 +69,10 @@ export function App(props: AppProps) {
 			updateWidgetErrors([]);
 			setBookResults((prevState) => response.val);
 		} else if (response.isOk === false) {
+			if(response.errors.length === 1 && response.errors[0].options.code === "UNKNOWN") {
+				updateDbErrors(response.errors);
+				return;
+			}
 			updateWidgetErrors(response.errors);
 			updateErrors([]);
 			updateDbErrors([]);
