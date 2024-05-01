@@ -69,7 +69,10 @@ export function App(props: AppProps) {
 			updateWidgetErrors([]);
 			setBookResults((prevState) => response.val);
 		} else if (response.isOk === false) {
-			if(response.errors.length === 1 && response.errors[0].options.code === "UNKNOWN") {
+			if (
+				response.errors.length === 1 &&
+				response.errors[0].options.code === "UNKNOWN"
+			) {
 				updateDbErrors(response.errors);
 				return;
 			}
@@ -78,7 +81,7 @@ export function App(props: AppProps) {
 			updateDbErrors([]);
 			setBookResults(null);
 		}
-		setCurrentBook(null
+		setCurrentBook(null);
 		setBorrowers(null);
 	};
 
