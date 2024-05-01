@@ -78,6 +78,7 @@ const BookDetails = ({
 		if (response.isOk) {
 			updateList(e, book);
 			updateErrors([]);
+			updateDbErrors([])
 		} else if (response.isOk === false) {
 			updateErrors(response.errors);
 		}

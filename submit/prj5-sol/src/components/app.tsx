@@ -78,7 +78,7 @@ export function App(props: AppProps) {
 			updateDbErrors([]);
 			setBookResults(null);
 		}
-		setCurrentBook(null);
+		setCurrentBook(null
 		setBorrowers(null);
 	};
 
