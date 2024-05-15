@@ -1,0 +1,31 @@
+App has 3 top-level state components:
+
+  searchUrl: Changed by user initiating a search from the search-box
+  or by clicking on a paging link.  When it is changed, it triggers
+  an effect which runs ws.findsBooksByUrl() and updates the results
+  section with the search results.
+
+  bookUrl: changed by a user clicking a details link in a search result.
+  A change here triggers an effect which uses ws.getBookByUrl() and set
+  the results accordingly.
+
+  appErrors: used for displaying errors.  These are globalErrors (which
+  are displayed by the top-level App) component and widgetErrors which
+  are passed down to the BookDisplay child component.
+
+Note that the ws is passed down to the child components and WS calls are
+made in the child component.  A processWsResult() handler is passed down
+to the child components to process the result of a WS call.
+
+Alternate architectures
+=======================
+
+  1.  Avoid effects by taking actions in UI event handlers directly.
+
+  2.  Instead of passing down the WS and calling individual WS in the
+      component, pass down individual web services and widgetErrors only.
+      This would avoid the somewhat clumsy processWsResult() being passed
+      down.
+
+
+
